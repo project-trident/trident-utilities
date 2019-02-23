@@ -99,7 +99,8 @@ do
     make makeplist | grep -v "check/what/makeplist/gives/you" > pkg-plist
     make clean
   fi
+
 done
 # Update port cat Makefile
-tcat=$(echo $port | cut -d '/' -f 1)
+tcat="trident"
 massage_subdir ${portsdir}/${tcat}
