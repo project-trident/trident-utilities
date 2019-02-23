@@ -6,13 +6,9 @@ target.path = /usr/local/bin
 TEMPLATE = app
 
 SOURCES += main.cpp \
-		mainUI.cpp \
-		netMgr.cpp \
-		SysTray.cpp
+		mainUI.cpp
 
-HEADERS  += mainUI.h \
-		netMgr.h \
-		SysTray.h
+HEADERS  += mainUI.h
 
 FORMS    += mainUI.ui
 
