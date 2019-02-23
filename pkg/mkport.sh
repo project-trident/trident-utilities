@@ -2,8 +2,8 @@
 # Helper script which will create the port / distfiles
 # from a checked out git repo
 
-# Set the port
-ports="trident/trident-networkmgr"
+# Set the port(s)
+ports="trident/trident-updatemgr"
 dfile="trident-utilities"
 
 massage_subdir() {

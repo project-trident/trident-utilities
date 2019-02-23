@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainUI</class>
+ <widget class="QMainWindow" name="MainUI">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>964</width>
+    <height>332</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>System Update Manager</string>
+  </property>
+  <property name="windowIcon">
+   <iconset theme="system-software-update">
+    <normaloff>.</normaloff>.</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#centralwidget{
+border-image: url(&quot;:/images/images/Trident-wallpaper4-darkgrey.png&quot;);
+background-position: center;
+}
+QWidget#tab_slide_1{
+border-image: url(:/images/images/Trident-wallpaper4-corner-lightgrey.png);
+background-position: bottom right;
+}
+QWidget#tab_slide_1 QLabel{
+color: palette(button-text);
+}
+QWidget#tab_slide_2{
+border-image: url(:/images/images/Trident-wallpaper3-corner-lightgrey.png);
+background-position: bottom left;
+}
+QWidget#tab_slide_2 QLabel{
+color: palette(button-text);
+}
+QWidget#tab_slide_3{
+border-image: url(:/images/images/Trident-wallpaper-corner-lightgrey.png);
+background-position: bottom right;
+}
+QWidget#tab_slide_3 QLabel, QTabWidget QLabel{
+color: palette(button-text);
+}
+QWidget#tab_slide_4{
+border-image: url(:/images/images/Trident-wallpaper2-corner-lightgrey.png);
+background-position: bottom right;
+}
+QWidget#tab_slide_4 QLabel{
+color: palette(button-text);
+}
+QWidget#stackedWidget, QWidget#page_welcome, QWidget#page_partitions, QWidget#page_user, QWidget#page_pkgs, QWidget#page_summary, QWidget#page_installing, QWidget#page_finished{
+background: transparent;
+}
+QToolButton#tool_encrypt_passcheck, QToolButton#tool_encrypt_passcheck:hover,
+QToolButton#tool_root_pass_chk, QToolButton#tool_root_pass_chk:hover,
+QToolButton#tool_user_pass_chk, QToolButton#tool_user_pass_chk:hover{
+background: transparent;
+border: none;
+}
+QFrame#frame_sidebar{
+background-color: palette(base);
+}
+QWidget#page_system, QWidget#page_keyboard, QWidget#page_locale, QWidget#page_log{
+background: transparent;
+}
+QToolBar, QStatusBar{
+background: palette(base);
+color: palette(alternate-base);
+}
+QRadioButton, QTabBar::tab{
+color: palette(button-text);
+}
+QTabWidget QScrollArea QGroupBox, QTabWidget QScrollArea QGroupBox:checked QLabel, QTabWidget QScrollArea QCheckBox{
+color: palette(button-text);
+}
+QTabWidget QScrollArea QGroupBox QLabel:disabled{
+color: palette(button);
+}
+QTabWidget QScrollArea QGroupBox:disabled{
+color: palette(button);
+}
+QTabWidget QScrollArea, QTabWidget QScrollArea .QWidget{
+background: transparent;
+}
+QTreeWidget{
+color: palette(button-text);
+}
+QTreeWidget::item:disabled{
+color: palette(highlighted-text);
+}
+QMenu::item{
+background-color: transparent;
+color: palette(highlight);
+}
+QMenu::item:selected{
+background-color: palette(highlight);
+color: palette(highlighted-text);
+}
+QComboBox QAbstractItemView{
+border-color: palette(highlight);
+background-color: palette(base);
+color: palette(alternate-base);
+}
+/* SCROLLBARS (NOTE: Changing 1 subcontrol means you have to change all of them)*/
+QScrollBar{
+  background: palette(alternate-base);
+}
+QScrollBar:horizontal{
+  margin: 0px 0px 0px 0px;
+}
+QScrollBar:vertical{
+  margin: 0px 0px 0px 0px;
+}
+QScrollBar::handle{
+  background: palette(base);
+  border: 1px solid transparent;
+  border-radius: 1px;
+}
+QScrollBar::handle:hover, QScrollBar::add-line:hover, QScrollBar::sub-line:hover{
+  background: palette(highlight);
+}
+QScrollBar::add-line{
+subcontrol-origin: none;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{
+height: 0px;
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal{
+width: 0px;
+}
+QScrollBar::sub-line{
+subcontrol-origin: none;
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <property name="spacing">
+     <number>10</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="page_updates">
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="2">
+           <widget class="QToolButton" name="tool_updates_start">
+            <property name="text">
+             <string>Start Updates</string>
+            </property>
+            <property name="icon">
+             <iconset theme="system-software-update">
+              <normaloff>.</normaloff>.</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QToolButton" name="tool_updates_check">
+            <property name="text">
+             <string>Check</string>
+            </property>
+            <property name="icon">
+             <iconset theme="system-help">
+              <normaloff>.</normaloff>.</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="0" colspan="3">
+           <widget class="QLabel" name="label_update_checktime">
+            <property name="text">
+             <string notr="true">Last Check:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="progressBar">
+          <property name="maximum">
+           <number>0</number>
+          </property>
+          <property name="value">
+           <number>-1</number>
+          </property>
+          <property name="textVisible">
+           <bool>true</bool>
+          </property>
+          <property name="format">
+           <string>Update Running</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="text_updates">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="page_trains">
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="2" column="1">
+         <widget class="QListWidget" name="list_trains"/>
+        </item>
+        <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="tool_change_train">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Change Repository</string>
+            </property>
+            <property name="icon">
+             <iconset theme="dialog-apply">
+              <normaloff>.</normaloff>.</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="label_train_description">
+          <property name="text">
+           <string notr="true">description</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="page_rollback">
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="1">
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <spacer name="verticalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="tool_be_activate">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Activate</string>
+            </property>
+            <property name="icon">
+             <iconset theme="system-reboot">
+              <normaloff>.</normaloff>.</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="tool_be_delete">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Delete</string>
+            </property>
+            <property name="icon">
+             <iconset theme="system-error">
+              <normaloff>.</normaloff>.</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="0">
+         <widget class="QTreeWidget" name="tree_be">
+          <property name="indentation">
+           <number>2</number>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="animated">
+           <bool>true</bool>
+          </property>
+          <property name="allColumnsShowFocus">
+           <bool>true</bool>
+          </property>
+          <property name="columnCount">
+           <number>3</number>
+          </property>
+          <attribute name="headerCascadingSectionResizes">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="headerDefaultSectionSize">
+           <number>100</number>
+          </attribute>
+          <attribute name="headerShowSortIndicator" stdset="0">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="headerStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>Boot Environment</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Size</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Date Created</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;NOTICE:&lt;/span&gt; Once a boot environment has been activated, a system reboot is required to finish the rollback procedures.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="contextMenuPolicy">
+    <enum>Qt::PreventContextMenu</enum>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftToolBarArea</set>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>LeftToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionUpdates"/>
+   <addaction name="actionUpdate_Paths"/>
+   <addaction name="actionRollback"/>
+  </widget>
+  <action name="actionUpdates">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="system-software-update">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Updates</string>
+   </property>
+   <property name="toolTip">
+    <string>Manage available system updates</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Paths">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="preferences-system-network">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Configure</string>
+   </property>
+   <property name="toolTip">
+    <string>Configure which update train to follow</string>
+   </property>
+  </action>
+  <action name="actionRollback">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="grsync">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Rollback</string>
+   </property>
+   <property name="toolTip">
+    <string>Manage Boot Environments</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

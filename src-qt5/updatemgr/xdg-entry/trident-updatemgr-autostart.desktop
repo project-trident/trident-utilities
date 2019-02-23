@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Comment=Update/Rollback for Project Trident (System tray autostart)
+GenericName=System upgrades or rollback (autostart)
+Name=Update Manager
+Icon=system-software-update
+TryExec=trident-updatemgr
+Exec=trident-updatemgr -autostart
