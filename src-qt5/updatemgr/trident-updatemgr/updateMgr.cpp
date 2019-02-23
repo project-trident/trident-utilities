@@ -87,7 +87,7 @@ QJsonObject UpdateManager::listTrains(){
   QJsonObject obj;
   // First line contains the current Train
   QString ctrain = traincontents.section("\n",0,0).section("Train:", 1,-1).simplified();
-  if(ctrain.isEmpty()){ ctrain = "Trident"; } //default train  (release)
+  if(ctrain.isEmpty() || ctrain=="TrueOS"){ ctrain = "Trident"; } //default train  (release)
   //obj.insert("current", ctrain);
   QStringList trains = traincontents.section("------\n",-1).split("\n");
   for(int i=0; i<trains.length(); i++){
@@ -159,12 +159,14 @@ void UpdateManager::trainsProcFinished(int retcode){
   bool success = (retcode==0);
   if(success && trainIsList){
     traincontents = TRPROC.readAll();
-    QFile file(TRAINSFILE);
-    if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
-      QTextStream str(&file);
-      str << traincontents;
-      file.close();
-    }
+    if(traincontents.startsWith("Current Train:")){
+      QFile file(TRAINSFILE);
+      if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
+        QTextStream str(&file);
+        str << traincontents;
+        file.close();
+      }
+    }else{ traincontents.clear(); } //bad reply
     emit trainsAvailable();
   }else if(success){
     //Just changed trains, need to re-load
