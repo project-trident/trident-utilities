@@ -46,6 +46,7 @@ void MainUI::setupConnections(){
   connect(UPMGR, SIGNAL(trainsAvailable()), this, SLOT(checkTrains()) );
   connect(ui->tree_be, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this, SLOT(be_selection_changed()));
   connect(ui->list_trains, SIGNAL(currentRowChanged(int)), this, SLOT(trainSelChanged()) );
+  connect(ui->tool_trains_rescan, SIGNAL(clicked()), UPMGR, SLOT(startTrainsCheck()));
 }
 
 // ===============

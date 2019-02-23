@@ -261,6 +261,28 @@ subcontrol-origin: none;
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
+           <widget class="QToolButton" name="tool_trains_rescan">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Check Repos</string>
+            </property>
+            <property name="icon">
+             <iconset theme="download"/>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
