@@ -6,6 +6,7 @@
 // === PUBLIC ===
 mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
   ui->setupUi(this);
+  NETWORK = new Networking(this);
   page_group = new QActionGroup(this);
     page_group->setExclusive(true);
     page_group->addAction(ui->actionConnections);
@@ -29,7 +30,7 @@ void mainUI::newInputs(QStringList args){
 // === PRIVATE ===
 //Initial page loading (on page change)
 void mainUI::updateConnections(){
-
+  qDebug() << "Got Network Devices:" << NETWORK->list_devices();
 }
 
 void mainUI::updateFirewall(){

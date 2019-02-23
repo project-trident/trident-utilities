@@ -12,6 +12,8 @@
 #include <QAction>
 #include <QActionGroup>
 
+#include "network.h"
+
 namespace Ui{
 	class mainUI;
 };
@@ -27,6 +29,7 @@ public slots:
 
 private:
 	Ui::mainUI *ui;
+	Networking *NETWORK;
 	QActionGroup *page_group;
 
 	//Initial page loading (on page change)

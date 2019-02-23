@@ -6,9 +6,11 @@ target.path = /usr/local/bin
 TEMPLATE = app
 
 SOURCES += main.cpp \
-		mainUI.cpp
+		mainUI.cpp \
+		network.cpp
 
-HEADERS  += mainUI.h
+HEADERS  += mainUI.h \
+		network.h
 
 FORMS    += mainUI.ui
 

@@ -6,6 +6,9 @@
 *.lo
 *.o
 *.obj
+*.qm
+.qmake.stash
+.build
 
 # Precompiled Headers
 *.gch
@@ -30,3 +33,13 @@
 *.exe
 *.out
 *.app
+src-qt5/Makefile
+src-qt5/*/Makefile
+src-qt5/*/*/Makefile
+src-qt5/networkmgr/trident-networkmgr
+src-qt5/updatemgr/susysup/.susysup
+src-qt5/updatemgr/susysup/Makefile
+src-qt5/updatemgr/trident-updatemgr/Makefile
+src-qt5/updatemgr/trident-updatemgr/trident-updatemgr
+src-qt5/networkmgr/Makefile
+src-qt5/networkmgr/trident-networkmgr
