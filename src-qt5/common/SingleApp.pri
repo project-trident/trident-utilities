@@ -6,4 +6,4 @@ message("Using SingleApplication class")
 SOURCES *= $${PWD}/SingleApplication.cpp
 HEADERS *= $${PWD}/SingleApplication.h
 
-INCLUDEPATH *= ${PWD}
+INCLUDEPATH *= $${PWD}

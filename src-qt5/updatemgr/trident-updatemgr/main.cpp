@@ -7,7 +7,7 @@
 #include <QDateTime>
 
 #include "updateMgr.h"
-#include "../../common/SingleApplication.h"
+#include "SingleApplication.h"
 #include "SysTray.h"
 
 UpdateManager *UPMGR = new UpdateManager();
