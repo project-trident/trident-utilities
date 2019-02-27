@@ -20,7 +20,7 @@ HEADERS  += mainUI.h \
 
 FORMS    += mainUI.ui
 
-include($(PWD)/../../common/SingleApp.pri)
+include($${PWD}/../../common/SingleApp.pri)
 
 TRANSLATIONS =  i18n/tri-umgr_af.ts \
                 i18n/tri-umgr_ar.ts \
