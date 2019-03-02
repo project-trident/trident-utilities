@@ -10,6 +10,7 @@
 #include <QObject>
 #include <QStringList>
 #include <QProcess>
+#include <QJsonObject>
 
 class Networking : public QObject {
 	Q_OBJECT
@@ -18,6 +19,8 @@ public:
 	~Networking();
 
 	QStringList list_devices();
+	QJsonObject list_config(QString device);
+
 
 private:
 
