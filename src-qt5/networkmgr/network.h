@@ -11,6 +11,7 @@
 #include <QStringList>
 #include <QProcess>
 #include <QJsonObject>
+#include <QNetworkConfigurationManager>
 
 class Networking : public QObject {
 	Q_OBJECT
@@ -20,9 +21,11 @@ public:
 
 	QStringList list_devices();
 	QJsonObject list_config(QString device);
-
+	QJsonObject current_info(QString device);
+	bool set_config(QString device, QJsonObject config);
 
 private:
+	QNetworkConfigurationManager *NETMAN;
 
 public slots:
 

@@ -30,7 +30,12 @@ void mainUI::newInputs(QStringList args){
 // === PRIVATE ===
 //Initial page loading (on page change)
 void mainUI::updateConnections(){
-  qDebug() << "Got Network Devices:" << NETWORK->list_devices();
+  QStringList devs = NETWORK->list_devices();
+  for(int i=0; i<devs.length(); i++){
+    NETWORK->list_config(devs[i]);
+    qDebug() << devs[i] << NETWORK->current_info(devs[i]);
+  }
+  //qDebug() << "Got Network Devices:" << NETWORK->list_devices();
 }
 
 void mainUI::updateFirewall(){
