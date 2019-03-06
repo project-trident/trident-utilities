@@ -87,7 +87,7 @@ do
 
   # Create the makesums / distinfo file
   cd "${portsdir}/${port}"
-  make makesum
+  make makesum VALID_CATEGORIES=trident
   if [ $? -ne 0 ] ; then
     echo "Failed makesum"
     exit 1
@@ -95,9 +95,9 @@ do
 
   # Create the pkg-plist file
   if [ ! -e "pkg-plist" ] ; then
-    make stage
-    make makeplist | grep -v "check/what/makeplist/gives/you" > pkg-plist
-    make clean
+    make stage VALID_CATEGORIES=trident
+    make makeplist VALID_CATEGORIES=trident | grep -v "check/what/makeplist/gives/you" > pkg-plist
+    make clean VALID_CATEGORIES=trident
   fi
 
 done
