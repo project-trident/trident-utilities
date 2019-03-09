@@ -37,7 +37,8 @@ QJsonObject Networking::list_config(QString device){
   obj.insert("network_type" , device.startsWith("wlan") ? "wifi" : "lan");
   obj.insert("network_config", words.filter("DHCP").isEmpty() ? "manual" : "dhcp");
   //obj.insert();
-
+  //TO-DO
+  // Need to parse out the ipv4 settings here
 
   return obj;
 }
@@ -61,10 +62,12 @@ QJsonObject Networking::current_info(QString device){
       obj.insert("ipv4", addresses[i].ip().toString());
       obj.insert("ipv4_netmask", addresses[i].netmask().toString());
       obj.insert("ipv4_broadcast", addresses[i].broadcast().toString());
+      //obj.insert("ipv4_gateway", addresses[i].gateway().toString());
     }else{
       obj.insert("ipv6", addresses[i].ip().toString());
       obj.insert("ipv6_netmask", addresses[i].netmask().toString());
       obj.insert("ipv6_broadcast", addresses[i].broadcast().toString());
+     // obj.insert("ipv6_gateway", addresses[i].gateway().toString());
     }
   }
   return obj;
@@ -74,4 +77,3 @@ bool Networking::set_config(QString device, QJsonObject config){
   qDebug() << "set Config:" << device << config;
   return false;
 }
-

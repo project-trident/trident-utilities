@@ -11,7 +11,6 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QActionGroup>
-//#include <QWidgetGroup>
 
 #include "network.h"
 

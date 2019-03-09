@@ -1,6 +1,7 @@
 #include "mainUI.h"
 #include "ui_mainUI.h"
 
+#include <QJsonDocument>
 #include <QDebug>
 
 // === PUBLIC ===
@@ -14,9 +15,6 @@ mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
     page_group->addAction(ui->actionVPN);
     page_group->addAction(ui->actionDNS);
   connect(page_group, SIGNAL(triggered(QAction*)), this, SLOT(pageChange(QAction*)) );
-
-  //connect(ui->radio_conn_dev_dhcp, SIGNAL(toggled(bool)), ui->group_conn_dev_static, SLOT(setChecked(!bool)) );
-  //connect(ui->group_conn_dev_static, SIGNAL(clicked()), ui->radio_conn_dev_dhcp, SLOT(toggle()) );
 
 
   connect(ui->combo_conn_devices, SIGNAL(currentIndexChanged(int)), this, SLOT(updateConnectionInfo()) );
@@ -52,10 +50,6 @@ void mainUI::updateConnections(){
   }
   int index = devs.indexOf(cdev);
   if(index>=0){ ui->combo_conn_devices->setCurrentIndex( index); }
-  //NETWORK->list_config(devs[i]);
-  //qDebug() << devs[i] << NETWORK->current_info(devs[i]);
-
-  //qDebug() << "Got Network Devices:" << NETWORK->list_devices();
 }
 
 void mainUI::updateFirewall(){
@@ -89,20 +83,27 @@ void mainUI::updateConnectionInfo(){
   QString cdev = ui->combo_conn_devices->currentText();
   QJsonObject config = NETWORK->list_config(cdev);
   QJsonObject status = NETWORK->current_info(cdev);
-  qDebug() << "Got Info:" << cdev << config << status;
+  qDebug() << "Got Info:" << cdev << config;
+  //Adjust the tabs based on type of device
   if(config.value("network_type").toString()=="wifi"){
     if(ui->tabs_conn->count()<3){
       ui->tabs_conn->addTab(ui->tab_conn_wifi, QIcon::fromTheme("network-wireless"), tr("Wifi Networks"));
     }
-  }else{
-    if(ui->tabs_conn->count()==3){
+  }else if(ui->tabs_conn->count()==3){
       ui->tabs_conn->removeTab(2);
-    }
   }
+  // Current status display
+  bool running = status.value("is_running").toBool();
+  ui->tool_dev_start->setVisible(!running);
+  ui->tool_dev_restart->setVisible(running);
+  ui->tool_dev_stop->setVisible(running);
+  ui->text_conn_dev_status->setText(QJsonDocument(status).toJson(QJsonDocument::Indented));
+  //Current config settings
   if(config.value("network_config").toString()=="dhcp"){
     ui->radio_conn_dev_dhcp->setChecked(true);
   }else{
     ui->group_conn_dev_static->setChecked(true);
+    
   }
 }
 
