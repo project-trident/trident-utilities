@@ -14,7 +14,8 @@
    <string>Network Manager</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="preferences-system-network"/>
+   <iconset theme="preferences-system-network">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -61,7 +62,8 @@
              <string>Enable</string>
             </property>
             <property name="icon">
-             <iconset theme="system-run"/>
+             <iconset theme="system-run">
+              <normaloff>.</normaloff>.</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -89,7 +91,8 @@
              <string>Disable</string>
             </property>
             <property name="icon">
-             <iconset theme="system-cancel"/>
+             <iconset theme="system-cancel">
+              <normaloff>.</normaloff>.</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -117,7 +120,8 @@
              <string>Restart</string>
             </property>
             <property name="icon">
-             <iconset theme="reload"/>
+             <iconset theme="reload">
+              <normaloff>.</normaloff>.</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -142,7 +146,8 @@
           </property>
           <widget class="QWidget" name="tab_conn_status">
            <attribute name="icon">
-            <iconset theme="dialog-information"/>
+            <iconset theme="dialog-information">
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Status</string>
@@ -187,7 +192,8 @@
                  <string>Refresh Status</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="download"/>
+                 <iconset theme="download">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -216,7 +222,8 @@
           </widget>
           <widget class="QWidget" name="tab_conn_config">
            <attribute name="icon">
-            <iconset theme="configure"/>
+            <iconset theme="configure">
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Configuration</string>
@@ -256,7 +263,8 @@
                  <string>Apply Settings</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="completed"/>
+                 <iconset theme="completed">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -356,7 +364,8 @@
                       <string notr="true"/>
                      </property>
                      <property name="icon">
-                      <iconset theme="edit-delete"/>
+                      <iconset theme="edit-delete">
+                       <normaloff>.</normaloff>.</iconset>
                      </property>
                      <property name="autoRaise">
                       <bool>true</bool>
@@ -378,7 +387,8 @@
                       <string notr="true"/>
                      </property>
                      <property name="icon">
-                      <iconset theme="document-new"/>
+                      <iconset theme="document-new">
+                       <normaloff>.</normaloff>.</iconset>
                      </property>
                      <property name="autoRaise">
                       <bool>true</bool>
@@ -409,7 +419,8 @@
           </widget>
           <widget class="QWidget" name="tab_conn_wifi">
            <attribute name="icon">
-            <iconset theme="network-wireless"/>
+            <iconset theme="network-wireless">
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Wifi Networks</string>
