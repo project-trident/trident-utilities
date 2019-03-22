@@ -40,6 +40,10 @@ private:
 
 private slots:
 	void pageChange(QAction *triggered);
+	void updateConnectionInfo();
+	void on_radio_conn_dev_dhcp_toggled(bool);
+	void on_group_conn_dev_static_clicked(bool);
+
 };
 
 #endif

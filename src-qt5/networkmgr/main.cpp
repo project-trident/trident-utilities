@@ -18,8 +18,9 @@ int main(int argc, char ** argv)
     if(a.isPrimaryProcess()){
       mainUI MW;
       SingleApplication::connect( &a, SIGNAL(InputsAvailable(QStringList)), &MW, SLOT(newInputs(QStringList)) );
-      MW.adjustSize();
+      if(MW.size().height() < MW.sizeHint().height()){ MW.adjustSize(); }
       MW.showNormal();
+      MW.newInputs(a.inputlist);
       return a.exec();
     }else{
       return 0;
