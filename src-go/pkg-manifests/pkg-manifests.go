@@ -98,8 +98,10 @@ func print_map(hash map[string]string) {
     line := ""
     if vals[0] != "" {
       line = "* "+keys[key] + " ("+vals[0]+") : "+vals[1]
-    } else {
+    } else if vals[1] != "" {
       line = "* "+keys[key] + " : "+vals[1]
+    } else {
+      line = "* "+keys[key]
     }
     fmt.Println(line) 
   }
@@ -113,7 +115,7 @@ func compare_files(prev map[string]string, now map[string]string, moved map[stri
   for key, val := range prev {
     if nowval, ok := now[key]; ok {
       /* Package still exists */
-      if val != nowval {
+      if S.Split(val,",")[1] != S.Split(nowval,",")[1] {
         /* New Version */
         verchange := S.Split(val,",")[1] + " -> " +S.Split(nowval,",")[1]
         uppkg[key] = S.Split(val,",")[0]+","+verchange

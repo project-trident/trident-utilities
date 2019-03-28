@@ -103,8 +103,15 @@ void mainUI::updateConnectionInfo(){
     ui->radio_conn_dev_dhcp->setChecked(true);
   }else{
     ui->group_conn_dev_static->setChecked(true);
-    
   }
+  ui->line_static_v4_address->setText(config.value("ipv4_address").toString());
+  ui->line_static_v4_broadcast->setText(config.value("ipv4_broadcast").toString());
+  ui->line_static_v4_gateway->setText(config.value("ipv4_gateway").toString());
+  ui->line_static_v4_netmask->setText(config.value("ipv4_netmask").toString());
+  ui->line_static_v6_address->setText(config.value("ipv6_address").toString());
+  ui->line_static_v6_broadcast->setText(config.value("ipv6_broadcast").toString());
+  ui->line_static_v6_gateway->setText(config.value("ipv6_gateway").toString());
+  ui->line_static_v6_netmask->setText(config.value("ipv6_netmask").toString());
 }
 
 void mainUI::on_radio_conn_dev_dhcp_toggled(bool on){
