@@ -6,9 +6,9 @@ import (
 	"os"
 	"os/exec"
 	S "strings"
-	"regexp"
+/*	"regexp"*/
 	"strconv"
-	"net/url"
+/*	"net/url"*/
 	"sort"
 )
 
@@ -38,8 +38,8 @@ func read_file(path string, hash map[string]string) {
   scanner := bufio.NewScanner(reader)
   for scanner.Scan() {
     elem := parse_line(scanner.Text())
-    /* Ignore invalid lines or scans by bots */
-    if elem[0] == "" || S.Contains( S.ToLower(elem[3]), "bot") { continue }
+    /* Ignore invalid lines */
+    if len(elem) != 3 { continue }
     /* Now add this entry into the hash */
     add_to_hash(elem, hash)
   }
@@ -49,11 +49,30 @@ func read_file(path string, hash map[string]string) {
   }
 }
 
+func read_moved(path string, hash map[string]string) {
+  file, err := os.Open(path)
+  exit_error(err)
+  reader := bufio.NewReader(file)
+  scanner := bufio.NewScanner(reader)
+  for scanner.Scan() {
+    elem := S.Split(scanner.Text(),"|")
+    /* Ignore invalid lines */
+    if len(elem) < 3 { continue }
+    if S.HasPrefix(elem[0], "#") { continue }
+    /* Now add this entry into the hash */
+    hash[elem[0]] = elem[1]+",["+elem[2]+"] "+elem[3]
+  }
+  file.Close()
+}
+
 func parse_line(text string) []string {
   /* Function to parse a pkg.list line into: */
   /* origin, pkgname, version */
-  line := make([]string, 3)
-  line = S.Split(text, " : ")
+  line := S.Split(text, " : ")
+  if len(line) == 2 {
+    var s []string
+    line = append(s , "", line[0], line[1])
+  }
   return line
 }
 
@@ -61,23 +80,6 @@ func add_to_hash( elem []string, hash map[string]string) {
   /* elem = [origin, pkgname, version] */
   combo := elem[0]+","+elem[2]
   hash[elem[1]] = combo
-}
-
-func print_hash(hash map[string]string){
-  fmt.Println("{")
-  first := true
-  val := ""
-  for key := range hash {
-    val = ""
-    if first != true { 
-      val = ","
-    } else { 
-      first = false
-    }
-    val = val+"\""+key+"\" : "+ strconv.Itoa( num_unique_items( S.Split(hash[key],",") ) )
-    fmt.Println(val)
-  }
-  fmt.Println("}")
 }
 
 func sort_keys(hash map[string]string) []string {
@@ -92,13 +94,18 @@ func sort_keys(hash map[string]string) []string {
 func print_map(hash map[string]string) {
   keys := sort_keys(hash);
   for key := range keys {
-    vals := S.Split( hash[key], ",")
-    line := "* "+key + " ("+vals[0]+") : "+vals[1]
+    vals := S.Split( hash[keys[key]], ",")
+    line := ""
+    if vals[0] != "" {
+      line = "* "+keys[key] + " ("+vals[0]+") : "+vals[1]
+    } else {
+      line = "* "+keys[key] + " : "+vals[1]
+    }
     fmt.Println(line) 
   }
 }
 
-func compare_files(prev map[string]string, now map[string]string) {
+func compare_files(prev map[string]string, now map[string]string, moved map[string]string) {
   newpkg := make(map[string]string);
   delpkg := make(map[string]string);
   uppkg := make(map[string]string);
@@ -107,12 +114,26 @@ func compare_files(prev map[string]string, now map[string]string) {
     if nowval, ok := now[key]; ok {
       /* Package still exists */
       if val != nowval {
-        verchange := S.Split(val,",")[1] + " -> " +S.Split(newval,",")[1]
-        uppkg[key] = S.Join( S.Split(val,",")[0], verchange)
+        /* New Version */
+        verchange := S.Split(val,",")[1] + " -> " +S.Split(nowval,",")[1]
+        uppkg[key] = S.Split(val,",")[0]+","+verchange
       }
     } else {
       /* Package no longer available */
-      delpkg[key] = val
+      origin := S.Split(val,",")[0]
+      info := ""
+      if origin != "" {
+        /* Load any information about why this port is not available */
+        if movedval, ok := moved[origin]; ok {
+          mval := S.Split(movedval, ",")
+          if mval[0] == "" {
+            info = mval[1]
+          } else {
+            info = "Moved to " +mval[0]+". "+mval[1]
+          }
+        }
+      }
+      delpkg[key] = origin+","+info
     }
   }
   /* Now iterate through the new packages */
@@ -124,25 +145,34 @@ func compare_files(prev map[string]string, now map[string]string) {
   }
 
   /* Now print out the results */
-  fmt.Println("## New Packages ("+ len(newpkg)+")")
-  print_map(newpkg)
-  fmt.Println("")
-  fmt.Println("## Deleted Packages ("+ len(delpkg)+")")
-  print_map(delpkg)
-  fmt.Println("")
-  fmt.Println("## Updated Packages ("+ len(uppkg)+")")
-  print_map(uppkg)
-
+  if len(newpkg) > 0 {
+    fmt.Println("## New Packages ("+ strconv.Itoa(len(newpkg))+")")
+    print_map(newpkg)
+    fmt.Println("")
+  }
+  if len(delpkg) > 0 {
+    fmt.Println("## Deleted Packages ("+ strconv.Itoa(len(delpkg))+")")
+    print_map(delpkg)
+    fmt.Println("")
+  }
+  if len(uppkg) > 0 {
+    fmt.Println("## Updated Packages ("+ strconv.Itoa(len(uppkg))+")")
+    print_map(uppkg)
+  }
 }
 
 func main() {
   oldlist := make(map[string]string)
   nowlist := make(map[string]string)
-  if os.Args.size() < 3 {
+  movedlist := make(map[string]string)
+  if len(os.Args) < 3 {
     fmt.Println("Invalid Inputs: Need <oldlist> <newlist>")
-    panic(1);
+    os.Exit(1);
   }
   read_file(os.Args[1], oldlist)
   read_file(os.Args[2], nowlist)
-  compare_files(oldlist, nowlist);
+  if len(os.Args) >3 {
+    read_moved(os.Args[3], movedlist);
+  }
+  compare_files(oldlist, nowlist, movedlist);
 }
