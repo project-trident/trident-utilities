@@ -185,6 +185,7 @@ void MainUI::checkTrains(){
   QStringList keys = trains.keys();
   for(int i=0; i<keys.length(); i++){
     QJsonObject obj = trains.value(keys[i]).toObject();
+    if( !obj.value("active").toBool() ){ continue; } //depricated repo - don't show it
     QListWidgetItem *it = new QListWidgetItem(ui->list_trains);
     it->setText(keys[i]);
     it->setWhatsThis(obj.value("description").toString());

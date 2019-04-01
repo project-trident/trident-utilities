@@ -87,7 +87,7 @@ QJsonObject UpdateManager::listTrains(){
   QJsonObject obj;
   // First line contains the current Train
   QString ctrain = traincontents.section("\n",0,0).section("Train:", 1,-1).simplified();
-  if(ctrain.isEmpty() || ctrain=="TrueOS"){ ctrain = "Trident"; } //default train  (release)
+  if(ctrain.isEmpty() || ctrain=="TrueOS"){ ctrain = "Trident-release"; } //default train  (release)
   //obj.insert("current", ctrain);
   QStringList trains = traincontents.section("------\n",-1).split("\n");
   for(int i=0; i<trains.length(); i++){
@@ -97,6 +97,7 @@ QJsonObject UpdateManager::listTrains(){
       tobj.insert("name", name);
       tobj.insert("description", trains[i].section("\t",1,-1).section("[",0,0).simplified());
       tobj.insert("current", name==ctrain);
+      tobj.insert("active", !trains[i].contains("[Deprecated]", Qt::CaseInsensitive));
     obj.insert(name, tobj);
   }
   return obj;
