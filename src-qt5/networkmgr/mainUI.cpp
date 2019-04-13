@@ -97,11 +97,38 @@ void mainUI::updateConnectionInfo(){
   ui->tool_dev_start->setVisible(!running);
   ui->tool_dev_restart->setVisible(running);
   ui->tool_dev_stop->setVisible(running);
-  ui->text_conn_dev_status->setText(QJsonDocument(status).toJson(QJsonDocument::Indented));
+  //Assemble the output text for the current status
+  QString skel = "<p><h3><b>%1</b></h3>%2</p>";
+  QStringList textblocks;
+  if(status.contains("ipv4")){
+    QStringList info;
+      info << QString(tr("Address: %1")).arg("<i>"+status.value("ipv4").toString()+"</i>");
+      info << QString(tr("Broadcast: %1")).arg("<i>"+status.value("ipv4_broadcast").toString()+"</i>");
+      info << QString(tr("Netmask: %1")).arg("<i>"+status.value("ipv4_netmask").toString()+"</i>");
+    textblocks << skel.arg( tr("IPv4"), "<ul><li>"+info.join("</li><li>")+"</li></ul>");
+  }
+  if(status.contains("ipv6")){
+    QStringList info;
+      info << QString(tr("Address: %1")).arg("<i>"+status.value("ipv6").toString()+"</i>");
+      info << QString(tr("Broadcast: %1")).arg("<i>"+status.value("ipv6_broadcast").toString()+"</i>");
+      info << QString(tr("Netmask: %1")).arg("<i>"+status.value("ipv6_netmask").toString()+"</i>");
+    textblocks << skel.arg( tr("IPv6"), "<ul><li>"+info.join("</li><br><li>")+"</li></ul>");
+  }
+  QString state = tr("Inactive");
+  if(textblocks.isEmpty()){
+    if(status.value("is_running").toBool() && status.value("is_up").toBool()){
+      state = tr("Waiting for connection");
+    }
+  }else{ state = tr("Connected"); }
+  textblocks.prepend( QString(tr("Current Status: %1")).arg("<i>"+state+"</i>") );
+  //ui->text_conn_dev_status->setText(QJsonDocument(status).toJson(QJsonDocument::Indented));
+  ui->text_conn_dev_status->setText(textblocks.join("<br>"));
   //Current config settings
   if(config.value("network_config").toString()=="dhcp"){
     ui->radio_conn_dev_dhcp->setChecked(true);
+    ui->group_conn_dev_static->setChecked(false);
   }else{
+    ui->radio_conn_dev_dhcp->setChecked(false);
     ui->group_conn_dev_static->setChecked(true);
   }
   ui->line_static_v4_address->setText(config.value("ipv4_address").toString());
