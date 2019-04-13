@@ -21,10 +21,6 @@ QStringList Networking::list_devices(){
     devs << configs[i].name();
   }
   return devs;
-  /*QProcess P;
-    P.start("ifconfig", QStringList() << "-l" << "ether");
-    P.waitForFinished();
-  return QString(P.readAll()).section("\n",0,0).split(" ", QString::SkipEmptyParts);*/
 }
 
 QJsonObject Networking::list_config(QString device){
@@ -35,11 +31,21 @@ QJsonObject Networking::list_config(QString device){
   QJsonObject obj;
   //Type of network
   obj.insert("network_type" , device.startsWith("wlan") ? "wifi" : "lan");
-  obj.insert("network_config", words.filter("DHCP").isEmpty() ? "manual" : "dhcp");
+  if(words.filter("DHCP").isEmpty()){
+    obj.insert("network_config", "manual");
+    int index = words.indexOf("inet");
+    if(index>=0 && words.length() > index+1){ obj.insert("ipv4_address", words[index+1]); }
+    index = words.indexOf("inet6");
+    if(index>=0 && words.length() > index+1){ obj.insert("ipv6_address", words[index+1]); }
+    
+  }else{
+    obj.insert("network_config", "dhcp");
+  }
+
   //obj.insert();
   //TO-DO
   // Need to parse out the ipv4 settings here
-
+  qDebug() << "List Config:" << device << words;
   return obj;
 }
 
