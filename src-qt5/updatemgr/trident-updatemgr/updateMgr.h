@@ -9,7 +9,11 @@
 #include <QTextStream>
 #include <QTimer>
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QDebug>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 
 class UpdateManager : public QObject {
 	Q_OBJECT
@@ -19,6 +23,9 @@ private:
 	QFile *logfile;
 	bool processIsCheck, trainIsList;
 	QDateTime lastcheck;
+	QString system_version;
+	QNetworkReply *repoCheck;
+	QJsonObject repo_info;
 
 	void clear_logfile();
 
@@ -34,6 +41,7 @@ public:
 	bool isRebootRequired();
 	QDateTime lastCheck(){ return lastcheck; }
 	bool updatesAvailable();
+	QJsonObject current_repo_info(){ return repo_info; }
 
 	bool startUpdates(bool fullupdates=false);
 	bool startUpdateCheck();
@@ -44,6 +52,8 @@ public:
 
 private slots:
 	void startUpdates(bool checkonly, bool fullupdate);
+	void fetchRepoInfo();
+	void saveRepoInfo();
 	void processMessage();
 	void processFinished(int retcode);
 	void trainsProcFinished(int retcode);

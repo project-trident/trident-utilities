@@ -4,10 +4,17 @@
 #define TRAINSFILE "/tmp/.sysup.trains"
 #define REBOOTFILE "/tmp/.rebootRequired"
 
+#define SYSMANIFEST "/var/db/current-manifest.json"
+#define REPOMANIFEST "https://project-trident.org/repo-info.json"
+#define REPOFILE "/tmp/.trident-repo.status"
+
 #include <unistd.h>
 
+QNetworkAccessManager *netman;
 // === PUBLIC ===
 UpdateManager::UpdateManager(QObject *parent) : QObject(parent) {
+  repoCheck = 0;
+  netman = new QNetworkAccessManager(this);
   PROC.setProcessChannelMode(QProcess::MergedChannels);
   connect(&PROC, SIGNAL(readyRead()), this, SLOT(processMessage()) );
   connect(&PROC, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int)) );
@@ -18,11 +25,12 @@ UpdateManager::UpdateManager(QObject *parent) : QObject(parent) {
 
   logcontents = readLocalFile(LOGFILE); //load any existing logfile first
   traincontents = readLocalFile(TRAINSFILE); //load any existing file first
+  system_version = QJsonDocument::fromJson( readLocalFile(SYSMANIFEST).toLocal8Bit()).object().value("os_version").toString();
+  repo_info = QJsonDocument::fromJson( readLocalFile(REPOFILE).toLocal8Bit() ).object();
   logfile = new QFile(LOGFILE);
   if(logfile->exists()){ lastcheck = logfile->fileTime(QFileDevice::FileModificationTime); }
   processIsCheck = logcontents.contains("Checking system for updates");
   connect(this, SIGNAL(startupdates(bool,bool)), this, SLOT(startUpdates(bool,bool))); //INTERNAL connection
-  //if(!QFile::exists(TRAINSFILE)){ QTimer::singleShot(10000, this, SLOT(startTrainsCheck())); }
 }
 
 UpdateManager::~UpdateManager(){
@@ -125,10 +133,36 @@ void UpdateManager::startUpdates(bool checkonly, bool fullupdate){
   if(!checkonly && fullupdate){ args.append("-fullupdate"); }
   //Clear out the current logs and start up the process
   clear_logfile();
-  if(checkonly){ lastcheck = QDateTime::currentDateTime(); }
+  if(checkonly){ lastcheck = QDateTime::currentDateTime(); fetchRepoInfo(); }
   PROC.start("/usr/local/sbin/.susysup",args);
   emit updateStarting();
   injectIntoLog( checkonly ? tr("Checking for system updates...") : tr("Starting system updates...") );
+}
+
+void UpdateManager::fetchRepoInfo(){
+  QNetworkRequest req( QUrl(REPOMANIFEST) );
+  req.setHeader(QNetworkRequest::UserAgentHeader, system_version); //ensure user-agent anonymity
+  repoCheck = netman->get(req);
+  connect(repoCheck, SIGNAL(finished()), this, SLOT(saveRepoInfo()) );
+}
+
+void UpdateManager::saveRepoInfo(){
+  if(repoCheck==0){ return; }
+  QJsonObject repo = QJsonDocument::fromJson(repoCheck->readAll()).object();
+  if(!repo.isEmpty()){
+    repo_info = repo; //save this into internal cache
+    QFile file(REPOFILE);
+    if( file.open(QIODevice::WriteOnly | QIODevice::Truncate) ){
+      QTextStream out(&file);
+      out << QJsonDocument(repo).toJson(QJsonDocument::Indented);
+      file.close();
+    }
+  }
+  //Now close/reset that pointer
+  disconnect(repoCheck);
+  repoCheck->close();
+  repoCheck->deleteLater();
+  repoCheck = 0;
 }
 
 void UpdateManager::processMessage(){
@@ -172,7 +206,7 @@ void UpdateManager::trainsProcFinished(int retcode){
   }else if(success){
     //Just changed trains, need to re-load
     QTimer::singleShot(0, this, SLOT(startTrainsCheck()));
-    startUpdateCheck();
+    QTimer::singleShot(2000, this, SLOT(startUpdateCheck()));
   }
 }
 
