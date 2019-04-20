@@ -123,7 +123,7 @@ func compare_files(prev map[string]string, now map[string]string, moved map[stri
     } else {
       /* Package no longer available */
       origin := S.Split(val,",")[0]
-      info := ""
+      info := "Unknown reason"
       if origin != "" {
         /* Load any information about why this port is not available */
         if movedval, ok := moved[origin]; ok {
@@ -147,6 +147,12 @@ func compare_files(prev map[string]string, now map[string]string, moved map[stri
   }
 
   /* Now print out the results */
+  fmt.Println("## Package Summary")
+  fmt.Println("* New Packages: "+strconv.Itoa(len(newpkg)) );
+  fmt.Println("* Deleted Packages: "+strconv.Itoa(len(delpkg)) );
+  fmt.Println("* Updated Packages: "+strconv.Itoa(len(uppkg)) );
+  fmt.Println("")
+
   if len(newpkg) > 0 {
     fmt.Println("## New Packages ("+ strconv.Itoa(len(newpkg))+")")
     print_map(newpkg)

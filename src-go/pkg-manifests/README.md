@@ -6,7 +6,7 @@ This is a simple go utility written to scan various package manifest logs and ge
 2. Run `go build pkg-manifests.go` to create the "stats-scan" binary
 
 ## To Run
-Usage: `pkg-manifests <old_manifest> <new_manifest>`
+Usage: `pkg-manifests <old_manifest> <new_manifest> [MOVED]`
 
 This will print all the text to the terminal, so if you want to save the results to a file instead you will want to pipe it into a file:
 `pkg-manifests <old_manifest> <new_manifest> > results.md`
