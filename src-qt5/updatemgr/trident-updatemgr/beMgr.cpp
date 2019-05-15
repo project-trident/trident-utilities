@@ -34,11 +34,15 @@ bool beManager::activate_be(QString name){
   return ok;
 }
 
-bool beManager::delete_be(QString name){
-  QStringList args; args << "beadm" << "destroy" << "-F" << name;
+bool beManager::delete_be(QStringList names){
+  QStringList args; args << "/usr/local/share/trident/scripts/delete_be_multi.sh" << names;
   bool ok = false;
   lastlog = cmdOutput(ok, "qsudo", args);
   return ok;
+}
+
+bool beManager::delete_be(QString name){
+  return delete_be(QStringList() << name);
 }
 
 QString beManager::lastCmdLog(){

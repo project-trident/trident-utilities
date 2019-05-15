@@ -13,6 +13,7 @@ public:
 
 	QJsonObject list_bootenv();
 	bool activate_be(QString name);
+	bool delete_be(QStringList names);
 	bool delete_be(QString name);
 
 	QString lastCmdLog();

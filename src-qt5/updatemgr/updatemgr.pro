@@ -10,4 +10,7 @@ adesk.path = $${INSTALL_ROOT}/usr/local/etc/xdg/autostart
 desk.files = xdg-entry/trident-updatemgr.desktop
 desk.path = $${INSTALL_ROOT}/usr/local/share/applications
 
-INSTALLS += adesk desk
+script.files = delete_be_multi.sh
+script.path = $${INSTALL_ROOT}/usr/local/share/trident/scripts
+
+INSTALLS += adesk desk script

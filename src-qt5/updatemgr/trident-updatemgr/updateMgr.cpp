@@ -85,6 +85,7 @@ bool UpdateManager::startUpdates(bool fullupdates){
 bool UpdateManager::startUpdateCheck(){
   if( isUpdateRunning() || isRebootRequired() ){ return false; }
   this->emit startupdates(true, false);
+  QTimer::singleShot(0, this, SLOT(fetchRepoInfo()) );
   return true;
 }
 
@@ -98,16 +99,25 @@ QJsonObject UpdateManager::listTrains(){
   if(ctrain.isEmpty() || ctrain=="TrueOS"){ ctrain = "Trident-release"; } //default train  (release)
   //obj.insert("current", ctrain);
   QStringList trains = traincontents.section("------\n",-1).split("\n");
+  QJsonObject tobj;
   for(int i=0; i<trains.length(); i++){
-    if(trains[i].simplified().isEmpty()){ continue; }
-    QJsonObject tobj;
+    if(trains[i].simplified().isEmpty()){
+      if(!tobj.isEmpty()){ obj.insert(tobj.value("name").toString(), tobj); }
+      continue;
+    }
     QString name =  trains[i].section("\t",0,0).simplified();
+    if(name.startsWith("[")){ // This is just a tag, not the repo name
+      if(name.contains("[Deprecated]", Qt::CaseInsensitive)){ tobj.insert("active", false); } //repo de-activated
+    }else{
+      if(repo_info.contains(name)){ tobj = repo_info.value(name).toObject(); }
+      else{ tobj = QJsonObject(); }
       tobj.insert("name", name);
       tobj.insert("description", trains[i].section("\t",1,-1).section("[",0,0).simplified());
       tobj.insert("current", name==ctrain);
-      tobj.insert("active", !trains[i].contains("[Deprecated]", Qt::CaseInsensitive));
-    obj.insert(name, tobj);
+      tobj.insert("active", true);
+    }
   }
+  if(!tobj.isEmpty()){ obj.insert(tobj.value("name").toString(), tobj); }
   return obj;
 }
 
@@ -116,6 +126,17 @@ bool UpdateManager::changeTrain(QString trainname){
   trainIsList = false;
   TRPROC.start("/usr/local/sbin/.susysup", QStringList() << "-change-train" << trainname);
   return true;
+}
+
+QJsonObject UpdateManager::currentTrainInfo(){
+  QJsonObject trains = listTrains();
+  QStringList repos = trains.keys();
+  for(int i=0; i<repos.length(); i++){
+    if(trains.value(repos[i]).toObject().value("current").toBool()){
+      return trains.value(repos[i]).toObject();
+    }
+  }
+  return QJsonObject();
 }
 
 // === PRIVATE ===
@@ -163,6 +184,7 @@ void UpdateManager::saveRepoInfo(){
   repoCheck->close();
   repoCheck->deleteLater();
   repoCheck = 0;
+  emit repoInfoAvailable();
 }
 
 void UpdateManager::processMessage(){

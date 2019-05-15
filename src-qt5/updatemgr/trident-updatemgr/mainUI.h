@@ -48,9 +48,13 @@ private slots:
 	// Updates Page
 	void on_tool_updates_check_clicked();
 	void on_tool_updates_start_clicked();
+	void on_tool_repo_infourl_clicked();
 	void updateMessage(bool check, QString msg);
 	void updateStarting();
 	void updateFinished(bool success);
+	void updateRepoInfo();
+	void updateErrataInfo();
+	// Boot Environments
 	void be_selection_changed();
 	void on_tool_be_activate_clicked();
 	void on_tool_be_delete_clicked();

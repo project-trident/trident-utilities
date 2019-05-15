@@ -50,6 +50,9 @@ public:
 	QJsonObject listTrains();
 	bool changeTrain(QString trainname);
 
+	QString systemVersion(){ return system_version; }
+	QJsonObject currentTrainInfo();
+
 private slots:
 	void startUpdates(bool checkonly, bool fullupdate);
 	void fetchRepoInfo();
@@ -71,6 +74,7 @@ signals:
 	void updateFinished(bool success);
 	void trainsStarting();
 	void trainsAvailable();
+	void repoInfoAvailable();
 };
 
 #endif
