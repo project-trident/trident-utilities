@@ -72,12 +72,17 @@ func parse_line(text string) []string {
 
 func add_to_hash( elem []string, hash map[string]string) {
   /* Daily index first */
-  combo := elem[1]+","+elem[2]
+  combo := elem[1]+","+elem[3]
   if ! S.Contains(hash[combo], elem[0]) {
     hash[combo] =S.Join( append(S.Split(hash[combo],","), elem[0]), ",")
   }
   /* Now Monthly index */
-  combo = S.Replace(elem[1], S.Split(elem[1],"/")[0]+"/", "", 1) + ","+elem[2]
+  combo = S.Replace(elem[1], S.Split(elem[1],"/")[0]+"/", "", 1) + ","+elem[3]
+  if ! S.Contains(hash[combo], elem[0]) {
+    hash[combo] =S.Join( append(S.Split(hash[combo],","), elem[0]), ",")
+  }
+  /* Now Total Monthly index (all versions)*/
+  combo = S.Replace(elem[1], S.Split(elem[1],"/")[0]+"/", "", 1)
   if ! S.Contains(hash[combo], elem[0]) {
     hash[combo] =S.Join( append(S.Split(hash[combo],","), elem[0]), ",")
   }
