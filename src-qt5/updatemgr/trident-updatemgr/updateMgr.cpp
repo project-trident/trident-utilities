@@ -7,7 +7,7 @@
 #define SYSMANIFEST "/var/db/current-manifest.json"
 #define REPOMANIFEST "https://project-trident.org/repo-info.json"
 #define REPOFILE "/tmp/.trident-repo.status"
-
+#define SYSIDFILE "/var/lib/dbus/machine-id"
 #include <unistd.h>
 
 QNetworkAccessManager *netman;
@@ -26,6 +26,7 @@ UpdateManager::UpdateManager(QObject *parent) : QObject(parent) {
   logcontents = readLocalFile(LOGFILE); //load any existing logfile first
   traincontents = readLocalFile(TRAINSFILE); //load any existing file first
   system_version = QJsonDocument::fromJson( readLocalFile(SYSMANIFEST).toLocal8Bit()).object().value("os_version").toString();
+  system_version = system_version.append("::"+readLocalFile(SYSIDFILE)); //inclide the random system uuid file (to better ensure uniqueness in our stats)
   repo_info = QJsonDocument::fromJson( readLocalFile(REPOFILE).toLocal8Bit() ).object();
   logfile = new QFile(LOGFILE);
   if(logfile->exists()){ lastcheck = logfile->fileTime(QFileDevice::FileModificationTime); }
