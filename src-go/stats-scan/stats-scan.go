@@ -278,7 +278,7 @@ func hash_to_chart_object( hash map[string]int, showdaily bool) ChartObj {
     if showdaily {
       _chart.Title = "Unique Systems Per Day"
     } else {
-      _chart.Title = "Unique System Per Month"
+      _chart.Title = "Unique Systems Per Month"
     }
     _chart.Type = "column"
     _chart.Legend = true
