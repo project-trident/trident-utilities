@@ -166,6 +166,14 @@ func parse_line(text string) []string {
     line[2] = S.ToLower(line[2])
   /* Pull out the method */
     line[3] = S.Replace(words[9],"\"", "", -1)
+    if S.Contains(line[3], " ") {
+      //invalid version string. Never have whitespace.
+      line = make([]string,4)
+    } else if S.Contains(line[3], "::") {
+      // Newer format : use the second section as the unique ID instead of the IP address
+      line[0] = S.Split(line[3], "::")[1]
+      line[3] = S.Split(line[3], "::")[0]
+    }
   }
   return line
 }
