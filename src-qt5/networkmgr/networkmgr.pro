@@ -14,7 +14,7 @@ HEADERS  += mainUI.h \
 
 FORMS    += mainUI.ui
 
-sudoconf.files = sudoers.d/*
+sudoconf.files = sudoers.d/trident-networkmgr
 sudoconf.path = /usr/local/etc/sudoers.d
 
 desktop.files = trident-networkmgr.desktop

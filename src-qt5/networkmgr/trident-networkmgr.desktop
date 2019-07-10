@@ -1,10 +1,11 @@
 [Desktop Entry]
-Exec=sudo trident-updatemanager
+Exec=sudo -n /usr/local/bin/trident-networkmgr
+TryExec=/usr/local/bin/trident-networkmgr
 Icon=preferences-system-network
 Terminal=false
 Type=Application
 StartupNotify=true
 Categories=Settings;Utility;
-Name=Network Manager
+Name=Networking
 GenericName=Network Settings Manager
 Comment=Network Settings
