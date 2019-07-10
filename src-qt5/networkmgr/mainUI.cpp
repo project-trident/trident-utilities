@@ -43,9 +43,10 @@ void mainUI::newInputs(QStringList args){
 //Initial page loading (on page change)
 void mainUI::updateConnections(){
   QStringList devs = NETWORK->list_devices();
+  devs.sort();
   QString cdev = ui->combo_conn_devices->currentText();
   ui->combo_conn_devices->clear();
-  for(int i=0; i<devs.length(); i++){
+  for(int i=devs.length()-1; i>=0; i--){
     ui->combo_conn_devices->addItem(QIcon::fromTheme( devs[i].startsWith("wlan") ? "network-wireless" : "network-wired-activated"), devs[i]);
   }
   int index = devs.indexOf(cdev);
@@ -84,12 +85,13 @@ void mainUI::updateConnectionInfo(){
   if(cdev.isEmpty()){ return; } //no devices loaded (yet)
   QJsonObject config = NETWORK->list_config(cdev);
   QJsonObject status = NETWORK->current_info(cdev);
-  qDebug() << "Got Info:" << cdev << config;
+  //qDebug() << "Got Info:" << cdev << config;
   //Adjust the tabs based on type of device
   if(config.value("network_type").toString()=="wifi"){
     if(ui->tabs_conn->count()<3){
       ui->tabs_conn->addTab(ui->tab_conn_wifi, QIcon::fromTheme("network-wireless"), tr("Wifi Networks"));
     }
+    ui->tab_conn_wifi->setEnabled( status.value("is_up").toBool());
   }else if(ui->tabs_conn->count()==3){
       ui->tabs_conn->removeTab(2);
   }
@@ -148,4 +150,31 @@ void mainUI::on_radio_conn_dev_dhcp_toggled(bool on){
 
 void mainUI::on_group_conn_dev_static_clicked(bool on){
   ui->radio_conn_dev_dhcp->setChecked(!on);
+}
+
+void mainUI::on_tool_dev_restart_clicked(){
+  QString cdev = ui->combo_conn_devices->currentText();
+  if(cdev.isEmpty()){ return; } //no devices loaded (yet)
+  NETWORK->setDeviceState(cdev, Networking::StateRestart);
+  QTimer::singleShot(500, this, SLOT(updateConnectionInfo()));
+  //Send a couple automatic status updates 5 & 10 seconds later
+  QTimer::singleShot(5000, this, SLOT(updateConnectionInfo()));
+  QTimer::singleShot(10000, this, SLOT(updateConnectionInfo()));
+}
+
+void mainUI::on_tool_dev_start_clicked(){
+  QString cdev = ui->combo_conn_devices->currentText();
+  if(cdev.isEmpty()){ return; } //no devices loaded (yet)
+  NETWORK->setDeviceState(cdev, Networking::StateRunning);
+  QTimer::singleShot(500, this, SLOT(updateConnectionInfo()));
+  //Send a couple automatic status updates 5 & 10 seconds later
+  QTimer::singleShot(5000, this, SLOT(updateConnectionInfo()));
+  QTimer::singleShot(10000, this, SLOT(updateConnectionInfo()));
+}
+
+void mainUI::on_tool_dev_stop_clicked(){
+  QString cdev = ui->combo_conn_devices->currentText();
+  if(cdev.isEmpty()){ return; } //no devices loaded (yet)
+  NETWORK->setDeviceState(cdev, Networking::StateStopped);
+  QTimer::singleShot(500, this, SLOT(updateConnectionInfo()));
 }

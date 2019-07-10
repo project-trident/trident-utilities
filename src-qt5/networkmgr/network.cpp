@@ -113,16 +113,20 @@ bool Networking::setDeviceState(QString device, State stat){
   switch(stat){
     case StateRunning:
       //Start the network device
-      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "up") == 0);
+      qDebug() << "Starting network device:" << device;
+      ok = (CmdReturn("ifconfig", QStringList() << device << "up") == 0);
       break;
     case StateStopped:
       //Stop the network device
-      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "down") == 0);
+      qDebug() << "Stopping network device:" << device;
+      ok = (CmdReturn("ifconfig", QStringList() << device << "down") == 0);
       break;
     case StateRestart:
       //Restart the network device
-      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "down") == 0);
-      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "up") == 0);
+      qDebug() << "Restarting network device:" << device;
+      ok = (CmdReturn("ifconfig", QStringList() << device << "down") == 0);
+      QThread::sleep(1);
+      ok = (CmdReturn("ifconfig", QStringList() << device << "up") == 0);
       break;
     case StateUnknown:
       break; //do nothing

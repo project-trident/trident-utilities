@@ -11,6 +11,7 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QActionGroup>
+#include <QTimer>
 
 #include "network.h"
 
@@ -43,7 +44,9 @@ private slots:
 	void updateConnectionInfo();
 	void on_radio_conn_dev_dhcp_toggled(bool);
 	void on_group_conn_dev_static_clicked(bool);
-
+	void on_tool_dev_restart_clicked();
+	void on_tool_dev_start_clicked();
+	void on_tool_dev_stop_clicked();
 };
 
 #endif

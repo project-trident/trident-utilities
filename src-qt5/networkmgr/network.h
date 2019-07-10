@@ -12,6 +12,7 @@
 #include <QProcess>
 #include <QJsonObject>
 #include <QNetworkConfigurationManager>
+#include <QThread>
 
 class Networking : public QObject {
 	Q_OBJECT
