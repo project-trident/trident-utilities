@@ -1,0 +1,10 @@
+[Desktop Entry]
+Exec=sudo trident-updatemanager
+Icon=preferences-system-network
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=Settings;Utility;
+Name=Network Manager
+GenericName=Network Settings Manager
+Comment=Network Settings
