@@ -89,6 +89,32 @@ Networking::State Networking::deviceState(QString device){
   else{ return StateStopped; }
 }
 
+QJsonObject Networking::scan_wifi_networks(QString device){
+  QStringList lines = CmdOutput("ifconfig", QStringList() << device << "list" << "scan").simplified().split("\n");
+  QJsonObject out;
+  for(int i=1; i<lines.length(); i++){
+    //Columns: [SSID, BSSID, Channel Number, Rate, Sig:Noise, INT, (rest are various capability codes)]
+    QStringList columns = lines[i].split(" ", QString::SkipEmptyParts);
+    qDebug() << "Got Columns:" << columns;
+    if(columns.length() < 6){ continue; } //invalid line : capabilities are 7+ and all optional
+    QJsonObject tmp;
+    tmp.insert("ssid", columns[0]);
+    tmp.insert("bssid", columns[1]);
+    tmp.insert("channel", columns[2].toInt());
+    int sig = columns[4].section(":",0,0).toInt();
+    int noise = columns[4].section(":",-1).toInt();
+    int sigpercent = 2*qAbs(sig - noise); //quick and dirty percentage: 2x the difference in DB strength
+    if(noise > sig){ sigpercent = 0; } //noise is greater than signal
+    tmp.insert("signal", QString::number(sigpercent)+"%");
+    tmp.insert("int", columns[5]);
+    QStringList cap;
+    for(int j=6; j<columns.length(); j++){ cap << columns[j]; }
+    tmp.insert("capabilities", QJsonArray::fromStringList(cap));
+    tmp.insert("is_locked", (columns.contains("WPA") || columns.contains("RSN") ));
+  }
+  qDebug() << "Wifi:" << out;
+  return out;
+}
 
 //  === PRIVATE ===
 QString Networking::CmdOutput(QString proc, QStringList args){

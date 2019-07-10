@@ -11,6 +11,7 @@
 #include <QStringList>
 #include <QProcess>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QNetworkConfigurationManager>
 #include <QThread>
 
@@ -26,6 +27,8 @@ public:
 	QJsonObject current_info(QString device);
 	bool set_config(QString device, QJsonObject config);
 	State deviceState(QString device);
+
+	QJsonObject scan_wifi_networks(QString device);
 
 private:
 	QNetworkConfigurationManager *NETMAN;
