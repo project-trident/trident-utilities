@@ -24,10 +24,8 @@ QStringList Networking::list_devices(){
 }
 
 QJsonObject Networking::list_config(QString device){
-  QProcess P;
-    P.start("sysrc", QStringList() << "-n" << "ifconfig_"+device);
-    P.waitForFinished();
-  QStringList words = QString(P.readAll()).section("\n",0,0).split(" ", QString::SkipEmptyParts);
+  if(device.isEmpty()){ return QJsonObject(); } //nothing to do - invalid request
+  QStringList words = CmdOutput("sysrc", QStringList() << "-n" << "ifconfig_"+device).section("\n",0,0).split(" ", QString::SkipEmptyParts);
   QJsonObject obj;
   //Type of network
   obj.insert("network_type" , device.startsWith("wlan") ? "wifi" : "lan");
@@ -35,17 +33,17 @@ QJsonObject Networking::list_config(QString device){
     obj.insert("network_config", "manual");
     int index = words.indexOf("inet");
     if(index>=0 && words.length() > index+1){ obj.insert("ipv4_address", words[index+1]); }
+    index = words.indexOf("netmask");
+    if(index>=0 && words.length() > index+1){ obj.insert("ipv4_netmask", words[index+1]); }
     index = words.indexOf("inet6");
     if(index>=0 && words.length() > index+1){ obj.insert("ipv6_address", words[index+1]); }
-    
+    //Also fetch the defaultrouter and put that in as the gateway
+    QString defrouter = CmdOutput("sysrc", QStringList() << "-n" << "defaultrouter").simplified();
+    obj.insert("ipv4_gateway", defrouter);
+
   }else{
     obj.insert("network_config", "dhcp");
   }
-
-  //obj.insert();
-  //TO-DO
-  // Need to parse out the ipv4 settings here
-  qDebug() << "List Config:" << device << words;
   return obj;
 }
 
@@ -82,4 +80,52 @@ QJsonObject Networking::current_info(QString device){
 bool Networking::set_config(QString device, QJsonObject config){
   qDebug() << "set Config:" << device << config;
   return false;
+}
+
+Networking::State Networking::deviceState(QString device){
+  QNetworkInterface config = QNetworkInterface::interfaceFromName(device);
+  if(!config.isValid()){ return StateUnknown; }
+  if( config.flags().testFlag(QNetworkInterface::IsUp) ){ return StateRunning; }
+  else{ return StateStopped; }
+}
+
+
+//  === PRIVATE ===
+QString Networking::CmdOutput(QString proc, QStringList args){
+  QProcess P;
+    P.start(proc, args);
+    P.waitForFinished();
+  return P.readAll();
+}
+
+int Networking::CmdReturn(QString proc, QStringList args){
+  QProcess P;
+    P.start(proc, args);
+    P.waitForFinished();
+  return P.exitCode();
+}
+
+// === PUBLIC SLOTS ===
+bool Networking::setDeviceState(QString device, State stat){
+  bool ok = false;
+  State curstate = deviceState(device);
+  if(curstate == stat){ return true; } //nothing to do
+  switch(stat){
+    case StateRunning:
+      //Start the network device
+      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "up") == 0);
+      break;
+    case StateStopped:
+      //Stop the network device
+      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "down") == 0);
+      break;
+    case StateRestart:
+      //Restart the network device
+      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "down") == 0);
+      ok = (CmdReturn("sudo", QStringList() << "ifconfig" << device << "up") == 0);
+      break;
+    case StateUnknown:
+      break; //do nothing
+  }
+  return ok;
 }

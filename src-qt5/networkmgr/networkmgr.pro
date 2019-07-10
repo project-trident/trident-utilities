@@ -14,6 +14,12 @@ HEADERS  += mainUI.h \
 
 FORMS    += mainUI.ui
 
+sudoconf.files = sudoers.d/*
+sudoconf.path = /usr/local/etc/sudoers.d
+
+desktop.files = trident-networkmgr.desktop
+desktop.path = /usr/local/share/applications
+
 include(../common/SingleApp.pri)
 
 TRANSLATIONS =  i18n/tri-nmgr_af.ts \
@@ -90,4 +96,4 @@ OBJECTS_DIR=./.build/obj
 RCC_DIR=./.build/rcc
 QMAKE_DISTCLEAN += -r ./.build
 
-INSTALLS += target dotrans
+INSTALLS += target dotrans sudoconf desktop

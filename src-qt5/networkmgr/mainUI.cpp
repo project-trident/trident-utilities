@@ -81,6 +81,7 @@ void mainUI::pageChange(QAction *triggered){
 
 void mainUI::updateConnectionInfo(){
   QString cdev = ui->combo_conn_devices->currentText();
+  if(cdev.isEmpty()){ return; } //no devices loaded (yet)
   QJsonObject config = NETWORK->list_config(cdev);
   QJsonObject status = NETWORK->current_info(cdev);
   qDebug() << "Got Info:" << cdev << config;

@@ -16,6 +16,7 @@
 class Networking : public QObject {
 	Q_OBJECT
 public:
+	enum State{ StateUnknown=0, StateRunning, StateStopped, StateRestart };
 	Networking(QObject *parent = 0);
 	~Networking();
 
@@ -23,11 +24,16 @@ public:
 	QJsonObject list_config(QString device);
 	QJsonObject current_info(QString device);
 	bool set_config(QString device, QJsonObject config);
+	State deviceState(QString device);
 
 private:
 	QNetworkConfigurationManager *NETMAN;
 
+	QString CmdOutput(QString proc, QStringList args);
+	int CmdReturn(QString proc, QStringList args);
+
 public slots:
+	bool setDeviceState(QString device, State stat);
 
 private slots:
 
