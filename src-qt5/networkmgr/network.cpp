@@ -52,6 +52,7 @@ QJsonObject Networking::current_info(QString device){
   QJsonObject obj;
   if(!config.isValid()){ return obj; }
   obj.insert("hardware_address", config.hardwareAddress());
+  obj.insert("is_wifi", device.startsWith("wlan"));
   obj.insert("is_up", config.flags().testFlag(QNetworkInterface::IsUp));
   obj.insert("is_running", config.flags().testFlag(QNetworkInterface::IsRunning));
   obj.insert("can_broadcast", config.flags().testFlag(QNetworkInterface::CanBroadcast));
@@ -74,6 +75,18 @@ QJsonObject Networking::current_info(QString device){
      // obj.insert("ipv6_gateway", addresses[i].gateway().toString());
     }
   }
+  //Now do any wifi-specific checks
+  if( device.startsWith("wlan") && obj.value("is_up").toBool() ){
+    QJsonObject connection;
+    QString tmp = CmdOutput("ifconfig", QStringList() << device);
+    //qDebug() << "wifi Status\n" << tmp;
+    connection.insert("media", tmp.section("\tmedia: ",-1).section("\n",0,0).simplified());
+    connection.insert("ssid", tmp.section("\tssid ",-1).section(" channel",0,0).simplified());
+    connection.insert("bssid", tmp.section(" bssid ",-1).section("\n", 0,0, QString::SectionSkipEmpty).section(" ",0,0).simplified());
+    connection.insert("authmode", tmp.section(" authmode ",-1).section(" ", 0,0, QString::SectionSkipEmpty));
+    obj.insert("wifi", connection);
+    //qDebug() << " - Parsed:" << connection;
+  }
   return obj;
 }
 
@@ -90,30 +103,97 @@ Networking::State Networking::deviceState(QString device){
 }
 
 QJsonObject Networking::scan_wifi_networks(QString device){
-  QStringList lines = CmdOutput("ifconfig", QStringList() << device << "list" << "scan").simplified().split("\n");
+  QStringList known = known_wifi_networks();
+  QStringList lines = CmdOutput("ifconfig", QStringList() << device << "list" << "scan" ).split("\n");
+  //qDebug() << "Got wifi scan:" << lines;
   QJsonObject out;
+  QRegExp bssidRegex("([^:]{2}:){5}[^:]{2}");
   for(int i=1; i<lines.length(); i++){
     //Columns: [SSID, BSSID, Channel Number, Rate, Sig:Noise, INT, (rest are various capability codes)]
-    QStringList columns = lines[i].split(" ", QString::SkipEmptyParts);
-    qDebug() << "Got Columns:" << columns;
+    QStringList columns = lines[i].split("  ", QString::SkipEmptyParts);
     if(columns.length() < 6){ continue; } //invalid line : capabilities are 7+ and all optional
     QJsonObject tmp;
-    tmp.insert("ssid", columns[0]);
-    tmp.insert("bssid", columns[1]);
-    tmp.insert("channel", columns[2].toInt());
-    int sig = columns[4].section(":",0,0).toInt();
-    int noise = columns[4].section(":",-1).toInt();
+    QString ssid = columns[0].simplified();
+    if(bssidRegex.exactMatch(ssid) && !bssidRegex.exactMatch(columns[1]) ){
+      //Got a missing ssid on this address. See this with access points that provide different channels from the same box
+      // or from jokers that think this "hides" their wifi access point.
+      ssid = ""; columns.prepend("");
+    }
+    //qDebug() << "Got Columns:" << columns;
+    tmp.insert("ssid", ssid);
+    tmp.insert("bssid", columns[1].simplified());
+    tmp.insert("channel", columns[2].simplified().toInt());
+    int sig = columns[4].section(":",0,0).simplified().toInt();
+    int noise = columns[4].section(":",-1).simplified().toInt();
     int sigpercent = 2*qAbs(sig - noise); //quick and dirty percentage: 2x the difference in DB strength
     if(noise > sig){ sigpercent = 0; } //noise is greater than signal
     tmp.insert("signal", QString::number(sigpercent)+"%");
     tmp.insert("int", columns[5]);
     QStringList cap;
-    for(int j=6; j<columns.length(); j++){ cap << columns[j]; }
+    for(int j=6; j<columns.length(); j++){ cap << columns[j].split(" ", QString::SkipEmptyParts); }
     tmp.insert("capabilities", QJsonArray::fromStringList(cap));
-    tmp.insert("is_locked", (columns.contains("WPA") || columns.contains("RSN") ));
+    tmp.insert("is_locked", (cap.contains("WPA") || cap.contains("RSN") ));
+    tmp.insert("is_saved", known.contains(ssid) || known.contains(tmp.value("bssid").toString()) );
+    if(out.contains(ssid)){
+      //Convert this to an array of access points with the same ssid
+      QJsonArray arr;
+      if(out.value(ssid).isArray()){ arr = out.value(ssid).toArray(); }
+      else { arr << out.value(ssid).toObject(); }
+      arr << tmp;
+      out.insert(ssid, arr);
+    }else{
+      out.insert(ssid, tmp); //first object with this ssid
+    }
   }
-  qDebug() << "Wifi:" << out;
+  //qDebug() << "Wifi:" << out;
   return out;
+}
+
+QStringList Networking::known_wifi_networks(){
+  static QStringList idcache;
+  static QDateTime cachecheck;
+  QDateTime lastMod = QFileInfo("/etc/wpa_supplicant").lastModified();
+  if(cachecheck.isNull() || (lastMod > cachecheck) ){
+    //Need to re-read the file to assemble the list of ID's.
+    idcache.clear();
+    QStringList contents = readFile("/etc/wpa_supplicant");
+    cachecheck = QDateTime::currentDateTime();
+    for(int i=0; i<contents.length(); i++){
+
+    }
+  }
+  return idcache;
+}
+
+//General Purpose functions
+QStringList Networking::readFile(QString path){
+  QFile file(path);
+  QStringList contents;
+  if(file.open(QIODevice::ReadOnly)){
+    QTextStream in(&file);
+    contents = in.readAll().split("\n");
+    file.close();
+  }
+  return contents;
+}
+
+bool Networking::writeFile(QString path, QStringList contents){
+  QString newpath = path+".new";
+  //Make sure the parent directory exists first
+  QDir dir; dir.mkpath(path.section("/",0,-2));
+  //Write the file to a new location
+  QFile file(newpath);
+  if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate)){ return false; } //could not open the file
+  if(!contents.isEmpty()){
+    QTextStream out(&file);
+    out << contents.join("\n");
+    //Most system config files need to end with a newline to be valid
+    if(!contents.last().endsWith("\n")){ out << "\n"; }
+  }
+  file.close();
+  //Now replace the original file
+  if(QFile::exists(path)){ QFile::remove(path); }
+  return QFile::rename(newpath, path); //now do a simple rename of the file.
 }
 
 //  === PRIVATE ===

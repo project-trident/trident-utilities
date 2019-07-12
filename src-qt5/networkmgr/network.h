@@ -14,6 +14,10 @@
 #include <QJsonArray>
 #include <QNetworkConfigurationManager>
 #include <QThread>
+#include <QFile>
+#include <QDir>
+#include <QFileInfo>
+#include <QDateTime>
 
 class Networking : public QObject {
 	Q_OBJECT
@@ -29,6 +33,11 @@ public:
 	State deviceState(QString device);
 
 	QJsonObject scan_wifi_networks(QString device);
+	QStringList known_wifi_networks();
+
+	//General Purpose functions
+	QStringList readFile(QString path);
+	bool writeFile(QString path, QStringList contents);
 
 private:
 	QNetworkConfigurationManager *NETMAN;

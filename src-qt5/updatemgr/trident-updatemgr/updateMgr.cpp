@@ -102,11 +102,13 @@ QJsonObject UpdateManager::listTrains(){
   QStringList trains = traincontents.section("------\n",-1).split("\n");
   QJsonObject tobj;
   for(int i=0; i<trains.length(); i++){
+    //qDebug() << "Trains line:" << trains[i];
     if(trains[i].simplified().isEmpty()){
       if(!tobj.isEmpty()){ obj.insert(tobj.value("name").toString(), tobj); }
       continue;
     }
     QString name =  trains[i].section("\t",0,0).simplified();
+    QStringList tags = trains[i].section("[",1,-1).section("]",0,-1).split("] [");
     if(name.startsWith("[")){ // This is just a tag, not the repo name
       if(name.contains("[Deprecated]", Qt::CaseInsensitive)){ tobj.insert("active", false); } //repo de-activated
     }else{
@@ -115,7 +117,8 @@ QJsonObject UpdateManager::listTrains(){
       tobj.insert("name", name);
       tobj.insert("description", trains[i].section("\t",1,-1).section("[",0,0).simplified());
       tobj.insert("current", name==ctrain);
-      tobj.insert("active", true);
+      tobj.insert("active", !tags.contains("Deprecated"));
+      obj.insert(name, tobj);
     }
   }
   if(!tobj.isEmpty()){ obj.insert(tobj.value("name").toString(), tobj); }

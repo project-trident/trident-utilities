@@ -50,7 +50,7 @@ public:
 	QJsonObject listTrains();
 	bool changeTrain(QString trainname);
 
-	QString systemVersion(){ return system_version; }
+	QString systemVersion(){ return system_version.section("::",0,0); }
 	QJsonObject currentTrainInfo();
 
 private slots:

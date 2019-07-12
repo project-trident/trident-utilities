@@ -10,6 +10,9 @@
     <height>404</height>
    </rect>
   </property>
+  <property name="contextMenuPolicy">
+   <enum>Qt::NoContextMenu</enum>
+  </property>
   <property name="windowTitle">
    <string>Network Manager</string>
   </property>
@@ -38,16 +41,6 @@
       </property>
       <widget class="QWidget" name="page_connections">
        <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="0">
-         <widget class="QComboBox" name="combo_conn_devices">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
@@ -138,6 +131,16 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item row="0" column="0">
+         <widget class="QComboBox" name="combo_conn_devices">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
         </item>
         <item row="1" column="0" colspan="2">
          <widget class="QTabWidget" name="tabs_conn">
@@ -290,33 +293,6 @@
               <layout class="QVBoxLayout" name="verticalLayout_3">
                <item>
                 <layout class="QGridLayout" name="gridLayout_2">
-                 <item row="5" column="0">
-                  <widget class="QLabel" name="label_2">
-                   <property name="text">
-                    <string>Gateway</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="1">
-                  <widget class="QLineEdit" name="line_static_v4_broadcast">
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="6" column="1">
-                  <widget class="QLineEdit" name="line_static_v4_netmask">
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="placeholderText">
-                    <string>255.255.255.0</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="1" column="1">
                   <widget class="QLabel" name="label_3">
                    <property name="font">
@@ -333,76 +309,6 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="6" column="0">
-                  <widget class="QLabel" name="label_4">
-                   <property name="text">
-                    <string>Netmask</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="1">
-                  <widget class="QLineEdit" name="line_static_v4_gateway">
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="placeholderText">
-                    <string/>
-                   </property>
-                   <property name="clearButtonEnabled">
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QLineEdit" name="line_static_v4_address">
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QLabel" name="label">
-                   <property name="font">
-                    <font>
-                     <weight>75</weight>
-                     <bold>true</bold>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>IPv6</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="6" column="2">
-                  <widget class="QLineEdit" name="line_static_v6_netmask">
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="2">
-                  <widget class="QLineEdit" name="line_static_v6_gateway">
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="2">
-                  <widget class="QLineEdit" name="line_static_v6_broadcast">
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="3" column="0">
                   <widget class="QLabel" name="label_9">
                    <property name="text">
@@ -413,8 +319,25 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="2">
-                  <widget class="QLineEdit" name="line_static_v6_address">
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="label_2">
+                   <property name="text">
+                    <string>Gateway</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="2">
+                  <widget class="QLineEdit" name="line_static_v6_netmask">
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="2">
+                  <widget class="QLineEdit" name="line_static_v6_gateway">
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
                    </property>
@@ -481,13 +404,69 @@
                    </item>
                   </layout>
                  </item>
-                 <item row="4" column="0">
-                  <widget class="QLabel" name="label_10">
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="label_4">
                    <property name="text">
-                    <string>Broadcast</string>
+                    <string>Netmask</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QLineEdit" name="line_static_v4_gateway">
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="placeholderText">
+                    <string/>
+                   </property>
+                   <property name="clearButtonEnabled">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QLineEdit" name="line_static_v4_address">
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="2">
+                  <widget class="QLineEdit" name="line_static_v6_address">
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="1">
+                  <widget class="QLineEdit" name="line_static_v4_netmask">
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="placeholderText">
+                    <string>255.255.255.0</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="label">
+                   <property name="font">
+                    <font>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>IPv6</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -519,6 +498,71 @@
            <attribute name="title">
             <string>Wifi Networks</string>
            </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_forget_wifi">
+                <property name="text">
+                 <string>Forget</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="cancel"/>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_connect_wifi">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Connect</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="network-wireless"/>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTreeWidget" name="tree_wifi_networks">
+              <column>
+               <property name="text">
+                <string>Signal Strength</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -575,6 +619,9 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
+   <property name="contextMenuPolicy">
+    <enum>Qt::NoContextMenu</enum>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
