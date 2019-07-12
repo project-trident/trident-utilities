@@ -155,11 +155,12 @@ inline QTreeWidgetItem* generateWifi_item(QJsonObject obj){
   QTreeWidgetItem *it = new QTreeWidgetItem();
   QString ssid = obj.value("ssid").toString();
   it->setData(0, Qt::UserRole, obj.value("bssid").toString() );
-  it->setData(1, obj);
+  it->setData(1, Qt::UserRole, obj);
   it->setText(0, obj.value("signal").toString() );
-  it->setText(1, ssid.isEmpty() ? "[Hidden]" : ssid);
-  if(obj.value("is_locked")){ it->setIcon(0, QIcon::fromTheme("encrypted")); }
-  if(obj.value("is
+  it->setText(1, ssid.isEmpty() ? "[Hidden] "+obj.value("bssid").toString() : ssid);
+  if(obj.value("is_locked").toBool()){ it->setIcon(0, QIcon::fromTheme("password")); }
+  if(obj.value("is_known").toBool()){ it->setIcon(1, QIcon::fromTheme("user_auth")); }
+  return it;
 }
 
 void mainUI::updateWifiConnections(){
@@ -169,7 +170,7 @@ void mainUI::updateWifiConnections(){
   //Make sure the current item stays selected if possible
   QString citem = "";
   if(ui->tree_wifi_networks->currentItem() != 0){
-    citem = ui->tree_wifi_networks->currentItem()->data(0, Qt::UserData).toString();
+    citem = ui->tree_wifi_networks->currentItem()->data(0, Qt::UserRole).toString();
   }
   //Now update the tree widget
   ui->tree_wifi_networks->clear();
@@ -188,7 +189,7 @@ void mainUI::updateWifiConnections(){
       it = new QTreeWidgetItem();
       it->setText(1, ssids[i].isEmpty() ? "[Hidden]" : ssids[i]);
       it->setData(0, Qt::UserRole, ssids[i]); //Mesh network - identify with the ssid instead of bssid
-      for(int a=0; a<arr.length(); a++){
+      for(int a=0; a<arr.count(); a++){
         QTreeWidgetItem *sit = generateWifi_item(arr[a].toObject());
         if(sit->data(0, Qt::UserRole).toString() == citem){ sel = sit; }
         it->addChild(sit);
@@ -197,8 +198,14 @@ void mainUI::updateWifiConnections(){
     }
     ui->tree_wifi_networks->addTopLevelItem(it);
   }
+
+  ui->tree_wifi_networks->sortItems(0, Qt::DescendingOrder);
+  ui->tree_wifi_networks->resizeColumnToContents(0);
   //Now re-select the item before the refresh if possible
- if(sel!=0){ ui->tree_wifi_networks->setCurrentItem(sel); }
+  if(sel!=0){
+    ui->tree_wifi_networks->setCurrentItem(sel);
+    ui->tree_wifi_networks->scrollToItem(sel);
+  }
 }
 
 void mainUI::on_radio_conn_dev_dhcp_toggled(bool on){
