@@ -112,6 +112,12 @@ void mainUI::updateConnectionInfo(){
       info << QString(tr("Connection: %1")).arg("<i>"+wifi.value("media").toString()+"</i>");
     textblocks << skel.arg( tr("Wireless Status"), "<ul><li>"+info.join("</li><li>")+"</li></ul>");
   }
+  if(status.contains("lan")){
+    QJsonObject lan = status.value("lan").toObject();
+    QStringList info;
+      info << QString(tr("Connection: %1")).arg("<i>"+lan.value("media").toString()+"</i>");
+    textblocks << skel.arg( tr("Wired Status"), "<ul><li>"+info.join("</li><li>")+"</li></ul>");
+  }
   if(status.contains("ipv4")){
     QStringList info;
       info << QString(tr("Address: %1")).arg("<i>"+status.value("ipv4").toString()+"</i>");

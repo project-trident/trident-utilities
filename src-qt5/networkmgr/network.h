@@ -32,8 +32,11 @@ public:
 	bool set_config(QString device, QJsonObject config);
 	State deviceState(QString device);
 
+	// Wifi specific functionality
 	QJsonObject scan_wifi_networks(QString device);
 	QStringList known_wifi_networks();
+	bool save_wifi_network(QJsonObject, bool clearonly = false);
+	bool connect_to_wifi_network(QString device, QString id); //ssid or bssid
 
 	//General Purpose functions
 	QStringList readFile(QString path);
