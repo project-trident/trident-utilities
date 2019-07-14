@@ -3,6 +3,7 @@
 #include <QNetworkInterface>
 
 static QRegExp ip4regex = QRegExp("([0-9]{1,3}\\.){3}[0-9]{1,3}");
+static QRegExp bssidRegex = QRegExp("([^:]{2}:){5}[^:]{2}");
 
 Networking::Networking(QObject *parent) : QObject(parent){
   NETMAN = new QNetworkConfigurationManager(this);
@@ -114,7 +115,6 @@ QJsonObject Networking::scan_wifi_networks(QString device){
   QStringList lines = CmdOutput("ifconfig", QStringList() << device << "list" << "scan" ).split("\n");
   //qDebug() << "Got wifi scan:" << lines;
   QJsonObject out;
-  QRegExp bssidRegex("([^:]{2}:){5}[^:]{2}");
   for(int i=1; i<lines.length(); i++){
     //Columns: [SSID, BSSID, Channel Number, Rate, Sig:Noise, INT, (rest are various capability codes)]
     QStringList columns = lines[i].split("  ", QString::SkipEmptyParts);
@@ -187,17 +187,18 @@ QStringList Networking::known_wifi_networks(){
 
 bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
   static QStringList exclude_quotes;
+  qDebug() << "Save Wifi Network:" << obj << clearonly;
   if(exclude_quotes.isEmpty()){ exclude_quotes << "key_mgmt" << "eap" << "proto"; }
   QString id = obj.value("bssid").toString();
-  if(id.isEmpty()){ id = obj.value("ssid").toString(); }
+  QString ssid = obj.value("ssid").toString();
+  if(id.isEmpty()){ id = ssid; }
   if(id.isEmpty()){ return false; }
   QStringList contents = readFile("/etc/wpa_supplicant.conf");
   if(contents.isEmpty()){ contents << "ctrl_interface=/var/run/wpa_supplicant"; }
-  if(known_wifi_networks().contains("id")){
     //Need to remove the currently-saved entry first
     QStringList tmp = contents.join("\n").split("{");
     for(int i=0; i<tmp.length(); i++){
-      if(tmp[i].contains("=\""+id+"\"") ){
+      if(tmp[i].contains("=\""+id+"\"") || tmp[i].contains("=\""+ssid+"\"") ){
         tmp.removeAt(i);
         if(i>=tmp.length()){
           //Need to remove the last piece of the network= section
@@ -206,7 +207,6 @@ bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
       }
     }
     contents = tmp.join("{").split("\n");
-  }
   if(!clearonly){
     if(!contents.last().isEmpty()){ contents<<""; }
     //Now add the new entry to the file contents
@@ -228,9 +228,28 @@ bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
   return writeFile("/etc/wpa_supplicant.conf", contents);
 }
 
+bool Networking::remove_wifi_network(QString id){
+  //Note - it is better to call the save_wifi_network with the clear flag, can filter by ssid AND bssid in one pass
+  QJsonObject obj;
+  obj.insert("bssid", id); //does not matter if bssid or ssid right now. same removal process for both
+  return save_wifi_network(obj, true); //remove only
+}
+
 bool Networking::connect_to_wifi_network(QString device, QString id){
   //ssid or bssid
-
+  if(!device.startsWith("wlan")){ return false; } //not a wifi device
+  int ret = -1;
+  if(bssidRegex.exactMatch(id)){
+    ret = CmdReturn("ifconfig", QStringList() << device << "bssid" << id );
+  } else {
+    ret = CmdReturn("ifconfig", QStringList() << device << "ssid" << id );
+  }
+  if(ret == 0 ){
+    //Now need to tell the device to re-connect to the new [b]ssid
+    return setDeviceState(device, StateRestart);
+  }else{
+    return false;
+  }
 }
 
 //General Purpose functions
@@ -242,7 +261,7 @@ QStringList Networking::readFile(QString path){
     contents = in.readAll().split("\n");
     file.close();
   }else{
-    qDebug() << "Coule not read file:" << path;
+    qDebug() << "Could not read file:" << path;
   }
   return contents;
 }

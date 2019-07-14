@@ -502,6 +502,26 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_5">
               <item>
+               <widget class="QToolButton" name="tool_wifi_refresh">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Scan</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="network-wireless">
+                  <normaloff>.</normaloff>.</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
                <spacer name="horizontalSpacer_3">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -520,7 +540,8 @@
                  <string>Forget</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="cancel"/>
+                 <iconset theme="cancel">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -539,7 +560,8 @@
                  <string>Connect</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="network-wireless"/>
+                 <iconset theme="network-wired">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>

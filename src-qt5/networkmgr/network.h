@@ -36,6 +36,7 @@ public:
 	QJsonObject scan_wifi_networks(QString device);
 	QStringList known_wifi_networks();
 	bool save_wifi_network(QJsonObject, bool clearonly = false);
+	bool remove_wifi_network(QString id);
 	bool connect_to_wifi_network(QString device, QString id); //ssid or bssid
 
 	//General Purpose functions

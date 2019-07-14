@@ -48,6 +48,8 @@ private slots:
 	void on_tool_dev_restart_clicked();
 	void on_tool_dev_start_clicked();
 	void on_tool_dev_stop_clicked();
+	void on_tool_forget_wifi_clicked();
+	void on_tool_connect_wifi_clicked();
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <QJsonDocument>
 #include <QDebug>
+#include <QMessageBox>
 
 // === PUBLIC ===
 mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
@@ -19,6 +20,7 @@ mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
 
   connect(ui->combo_conn_devices, SIGNAL(currentIndexChanged(int)), this, SLOT(updateConnectionInfo()) );
   connect(ui->tool_conn_status_refresh, SIGNAL(clicked()), this, SLOT(updateConnectionInfo()) );
+  connect(ui->tool_wifi_refresh, SIGNAL(clicked()), this, SLOT(updateWifiConnections()) );
 }
 
 mainUI::~mainUI(){
@@ -248,3 +250,33 @@ void mainUI::on_tool_dev_stop_clicked(){
   NETWORK->setDeviceState(cdev, Networking::StateStopped);
   QTimer::singleShot(500, this, SLOT(updateConnectionInfo()));
 }
+
+void mainUI::on_tool_forget_wifi_clicked(){
+  QTreeWidgetItem *curit = ui->tree_wifi_networks->currentItem();
+  if(curit == 0){ return; } //nothing selected
+  QJsonObject info = curit->data(1, Qt::UserRole).toJsonObject();
+  if(info.isEmpty()){ return; } // nothing to do
+  if( NETWORK->save_wifi_network(info, true) ){
+    QTimer::singleShot(1000, this, SLOT(updateWifiConnections()) );
+  }else{
+    QMessageBox::warning(this, tr("Error"), QString(tr("Could not forget network settings: %1")).arg(info.value("ssid").toString()) );
+  }
+}
+
+void mainUI::on_tool_connect_wifi_clicked(){
+  QTreeWidgetItem *curit = ui->tree_wifi_networks->currentItem();
+  if(curit == 0){ return; } //nothing selected
+  QJsonObject info = curit->data(1, Qt::UserRole).toJsonObject();
+  QString id = curit->data(0, Qt::UserRole).toString();
+  if(info.isEmpty()){ return; } //nothing selected
+  QString cdev = ui->combo_conn_devices->currentText();
+  if(cdev.isEmpty()){ return; } //no devices loaded (yet)
+  if(!info.value("is_known").toBool()){
+     //See if we need to save connection info first
+     bool secure = info.value("is_locked").toBool();
+     
+  }
+  NETWORK->connect_to_wifi_network(cdev, id);
+
+}
+
