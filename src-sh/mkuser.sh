@@ -73,9 +73,9 @@ num=0
 while [ ${num} -lt ${numusers} ]
 do
   user=`jq -r '.['${num}'].name' "${userfile}"
-  usercomment=`jq -r '.['${num}'].name' "${userfile}"
-  usershell=`jq -r '.['${num}'].name' "${userfile}"
-  userpass=`jq -r '.['${num}'].name' "${userfile}"
+  usercomment=`jq -r '.['${num}'].comment' "${userfile}"
+  usershell=`jq -r '.['${num}'].shell' "${userfile}"
+  userpass=`jq -r '.['${num}'].password' "${userfile}"
   createUser
   num=`expr ${num} + 1`
 done
