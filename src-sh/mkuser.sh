@@ -43,10 +43,7 @@ userfile=$1
 zpool=$2
 homedir="/home"
 
-usercomment="${user}"
-usershell="/bin/bash"
-
-if [ -z "${user}" ] ; then
+if [ -z "$1" ] || [ ! -e "${userfile}" ] ; then
   echo "Usage: $0 <users.json file> [zpool=autodetect]] "
   echo ' users.json format:
 This file is an array of JSON objects, with one user account per object. This file will get deleted as soon as the script finishes.
