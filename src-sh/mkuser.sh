@@ -25,10 +25,11 @@ findZpool(){
 
 createUser(){
   #Create the dataset
+  
   zfs create -o "mountpoint=${homedir}/${user}" -o setuid=off -o compression=on -o atime=off -o canmount=on "${_zpool}/${homedir}/${user}"
 
   # Create the user
-  useradd -M -s "${usershell}" -h "${homedir}/${user}" -c"${usercomment}" -G "wheel,users,audio,video,input,cdrom,bluetooth" "${user}"
+  useradd -M -s "${usershell}" -d "${homedir}/${user}" -c"${usercomment}" -G "wheel,users,audio,video,input,cdrom,bluetooth" "${user}"
   echo "${user}:${userpass}" |  chpasswd -c SHA512
 
   # Setup ownership of the dataset
