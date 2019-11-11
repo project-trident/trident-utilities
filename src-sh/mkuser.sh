@@ -20,7 +20,7 @@ findZpool(){
   _zpool=`zfs list | grep -E '.* ${homedir}$' | cut -d / -f 1`
   if [ -z "${_zpool}" ] ; then
     #Could not find parent dataset, just grab the first zpool instead (in case a UFS root filesystem?)
-    _zpool=`zpool list -H | grep ONLINE | cut -w -f 1`
+    _zpool=`zpool list -H | grep ONLINE | cut -d ' ' -f 1`
   fi
 }
 
