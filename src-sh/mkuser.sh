@@ -55,10 +55,6 @@ Example:
 
 '
   exit 1
-elif [ -d "${homedir}/${user}"] ; then
-  #Dir already exists
-  echo "Home dir already exists: ${homedir}/${user}"
-  exit 2
 fi
 
 #Now verify/find the current zpool
@@ -77,6 +73,7 @@ do
   usershell=`jq -r '.['${num}'].shell' "${userfile}"
   userpass=`jq -r '.['${num}'].password' "${userfile}"
   createUser
+  echo "User Created: ${user}"
   num=`expr ${num} + 1`
 done
 
