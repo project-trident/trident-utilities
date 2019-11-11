@@ -35,8 +35,8 @@ createUser(){
     return 1
   fi
   echo "${user}:${userpass}" |  chpasswd -c SHA512
-
   # Setup ownership of the dataset
+  chown "${user}:${user}" "${homedir}/${user}"
   # Allow the user to create/destroy child datasets and snapshots on their home dir
   zfs allow "${user}" mount,create,destroy,rollback,snapshot "${_zpool}${homedir}/${user}"
   if [ $? -ne 0 ] ; then
@@ -86,3 +86,5 @@ do
   fi
   num=`expr ${num} + 1`
 done
+
+rm "${userfile}" #remove temporary file
