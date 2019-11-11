@@ -9,11 +9,10 @@ fi
 
 findZpool(){
   #This sets the "_zpool" variable, and verifies the input "zpool" variable
-  if [ -n "${zpool}" ] ; then
+  if [ -n "${_zpool}" ] ; then
     #Got an input zpool - see if this one is valid
-    if [ 0 -eq `zpool list | grep -q -E "^${zpool} "` ] ; then
+    if [ 0 -eq `zpool list | grep -q -E "^${_zpool} "` ] ; then
       #Good pool name - go ahead and use it
-      _zpool="${zpool}"
       return
     fi
   fi
@@ -40,7 +39,7 @@ createUser(){
 
 #Check inputs
 userfile=$1
-zpool=$2
+_zpool=$2
 homedir="/home"
 
 if [ -z "$1" ] || [ ! -e "${userfile}" ] ; then
@@ -68,14 +67,11 @@ numusers=`jq -r '. | length' ${userfile}`
 num=0
 while [ ${num} -lt ${numusers} ]
 do
-  user=`jq -r '.['${num}'].name' "${userfile}"
-  usercomment=`jq -r '.['${num}'].comment' "${userfile}"
-  usershell=`jq -r '.['${num}'].shell' "${userfile}"
-  userpass=`jq -r '.['${num}'].password' "${userfile}"
+  user=`jq -r '.['${num}'].name' "${userfile}"`
+  usercomment=`jq -r '.['${num}'].comment' "${userfile}"`
+  usershell=`jq -r '.['${num}'].shell' "${userfile}"`
+  userpass=`jq -r '.['${num}'].password' "${userfile}"`
   createUser
   echo "User Created: ${user}"
   num=`expr ${num} + 1`
 done
-
-#Done
-return 0
