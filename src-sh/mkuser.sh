@@ -38,7 +38,7 @@ createUser(){
 
   # Setup ownership of the dataset
   # Allow the user to create/destroy child datasets and snapshots on their home dir
-  zfs allow "${user}" mount,create,destroy,rollback,snapshot "${_zpool}/${homedir}/${user}"
+  zfs allow "${user}" mount,create,destroy,rollback,snapshot "${_zpool}${homedir}/${user}"
   if [ $? -ne 0 ] ; then
     return 1
   fi
@@ -79,7 +79,7 @@ do
   usershell=`jq -r '.['${num}'].shell' "${userfile}"`
   userpass=`jq -r '.['${num}'].password' "${userfile}"`
   createUser
-  if [ $? -eq 0 ; then
+  if [ $? -eq 0 ] ; then
     echo "User Created: ${user}"
   else
     echo "User Not Created: ${user}"
