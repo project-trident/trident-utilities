@@ -24,18 +24,24 @@ findZpool(){
 }
 
 createUser(){
-  #Create the dataset
-  
-  zfs create -o "mountpoint=${homedir}/${user}" -o setuid=off -o compression=on -o atime=off -o canmount=on "${_zpool}/${homedir}/${user}"
-
+  #Create the dataset    
+  zfs create -o "mountpoint=${homedir}/${user}" -o "setuid=off" -o "compression=on" -o "atime=off" -o "canmount=on" "${_zpool}${homedir}/${user}"
+  if [ $? -ne 0 ] ; then
+    return 1
+  fi
   # Create the user
   useradd -M -s "${usershell}" -d "${homedir}/${user}" -c"${usercomment}" -G "wheel,users,audio,video,input,cdrom,bluetooth" "${user}"
+  if [ $? -ne 0 ] ; then
+    return 1
+  fi
   echo "${user}:${userpass}" |  chpasswd -c SHA512
 
   # Setup ownership of the dataset
   # Allow the user to create/destroy child datasets and snapshots on their home dir
   zfs allow "${user}" mount,create,destroy,rollback,snapshot "${_zpool}/${homedir}/${user}"
-
+  if [ $? -ne 0 ] ; then
+    return 1
+  fi
 }
 
 #Check inputs
@@ -73,6 +79,10 @@ do
   usershell=`jq -r '.['${num}'].shell' "${userfile}"`
   userpass=`jq -r '.['${num}'].password' "${userfile}"`
   createUser
-  echo "User Created: ${user}"
+  if [ $? -eq 0 ; then
+    echo "User Created: ${user}"
+  else
+    echo "User Not Created: ${user}"
+  fi
   num=`expr ${num} + 1`
 done
