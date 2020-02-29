@@ -49,7 +49,7 @@ void mainUI::updateConnections(){
   QString cdev = ui->combo_conn_devices->currentText();
   ui->combo_conn_devices->clear();
   for(int i=devs.length()-1; i>=0; i--){
-    ui->combo_conn_devices->addItem(QIcon::fromTheme( devs[i].startsWith("wlan") ? "network-wireless" : "network-wired-activated"), devs[i]);
+    ui->combo_conn_devices->addItem(QIcon::fromTheme( devs[i].startsWith("wl") ? "network-wireless" : "network-wired-activated"), devs[i]);
   }
   int index = devs.indexOf(cdev);
   if(index>=0){ ui->combo_conn_devices->setCurrentIndex( index); }
@@ -110,16 +110,15 @@ void mainUI::updateConnectionInfo(){
     QJsonObject wifi = status.value("wifi").toObject();
     QStringList info;
       info << QString(tr("Access Point: %1")).arg("<i>"+wifi.value("ssid").toString()+"</i>");
-      info << QString(tr("Security: %1")).arg("<i>"+wifi.value("authmode").toString()+"</i>");
-      info << QString(tr("Connection: %1")).arg("<i>"+wifi.value("media").toString()+"</i>");
+      info << QString(tr("Security: %1")).arg("<i>"+wifi.value("key_mgmt").toString()+"</i>");
     textblocks << skel.arg( tr("Wireless Status"), "<ul><li>"+info.join("</li><li>")+"</li></ul>");
   }
-  if(status.contains("lan")){
+/*  if(status.contains("lan")){
     QJsonObject lan = status.value("lan").toObject();
     QStringList info;
       info << QString(tr("Connection: %1")).arg("<i>"+lan.value("media").toString()+"</i>");
     textblocks << skel.arg( tr("Wired Status"), "<ul><li>"+info.join("</li><li>")+"</li></ul>");
-  }
+  }*/
   if(status.contains("ipv4")){
     QStringList info;
       info << QString(tr("Address: %1")).arg("<i>"+status.value("ipv4").toString()+"</i>");
@@ -130,16 +129,15 @@ void mainUI::updateConnectionInfo(){
   if(status.contains("ipv6")){
     QStringList info;
       info << QString(tr("Address: %1")).arg("<i>"+status.value("ipv6").toString()+"</i>");
-      info << QString(tr("Broadcast: %1")).arg("<i>"+status.value("ipv6_broadcast").toString()+"</i>");
+      if(!status.value("ipv6_broadcast").toString().isEmpty()){ info << QString(tr("Broadcast: %1")).arg("<i>"+status.value("ipv6_broadcast").toString()+"</i>"); }
       info << QString(tr("Netmask: %1")).arg("<i>"+status.value("ipv6_netmask").toString()+"</i>");
-    textblocks << skel.arg( tr("IPv6"), "<ul><li>"+info.join("</li><br><li>")+"</li></ul>");
+    textblocks << skel.arg( tr("IPv6"), "<ul><li>"+info.join("</li><li>")+"</li></ul>");
   }
   QString state = tr("Inactive");
-  if(textblocks.isEmpty()){
-    if(status.value("is_running").toBool() && status.value("is_up").toBool()){
+  if(status.value("is_active").toBool()){ state = tr("Connected"); }
+  else if(status.value("is_running").toBool() && status.value("is_up").toBool()){
       state = tr("Waiting for connection");
-    }
-  }else{ state = tr("Connected"); }
+  }
   textblocks.prepend( QString(tr("Current Status: %1")).arg("<i>"+state+"</i>") );
   //ui->text_conn_dev_status->setText(QJsonDocument(status).toJson(QJsonDocument::Indented));
   ui->text_conn_dev_status->setText(textblocks.join(""));
@@ -173,7 +171,7 @@ inline QTreeWidgetItem* generateWifi_item(QJsonObject obj){
 
 void mainUI::updateWifiConnections(){
   QString cdev = ui->combo_conn_devices->currentText();
-  if(cdev.isEmpty() || !cdev.startsWith("wlan") ){ return; }
+  if(cdev.isEmpty() || !cdev.startsWith("wl") ){ return; }
   QJsonObject scan = NETWORK->scan_wifi_networks(cdev);
   //Make sure the current item stays selected if possible
   QString citem = "";
@@ -279,4 +277,3 @@ void mainUI::on_tool_connect_wifi_clicked(){
   NETWORK->connect_to_wifi_network(cdev, id);
 
 }
-

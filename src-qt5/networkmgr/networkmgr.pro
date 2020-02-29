@@ -1,7 +1,7 @@
 QT       += core gui widgets network
 
 TARGET = trident-networkmgr
-target.path = /usr/local/bin
+target.path = /usr/bin
 
 TEMPLATE = app
 
@@ -15,7 +15,7 @@ HEADERS  += mainUI.h \
 FORMS    += mainUI.ui
 
 sudoconf.files = sudoers.d/trident-networkmgr
-sudoconf.path = /usr/local/etc/sudoers.d
+sudoconf.path = /etc/sudoers.d
 
 desktop.files = trident-networkmgr.desktop
 desktop.path = /usr/local/share/applications

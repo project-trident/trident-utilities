@@ -48,13 +48,16 @@ private:
 
 	QString CmdOutput(QString proc, QStringList args);
 	int CmdReturn(QString proc, QStringList args);
+	//QJsonObject LatestScanResults(QString device);
 
 public slots:
 	bool setDeviceState(QString device, State stat);
+	//void startWifiScan(QString device);
 
 private slots:
+	//void readWifiScanResults();
 
 signals:
-
+	void NewWifiScanResults(QString);
 };
 #endif
