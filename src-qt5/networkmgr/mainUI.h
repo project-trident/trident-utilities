@@ -43,8 +43,7 @@ private slots:
 	void pageChange(QAction *triggered);
 	void updateConnectionInfo();
 	void updateWifiConnections();
-	void on_radio_conn_dev_dhcp_toggled(bool);
-	void on_group_conn_dev_static_clicked(bool);
+
 	void on_tool_dev_restart_clicked();
 	void on_tool_dev_start_clicked();
 	void on_tool_dev_stop_clicked();

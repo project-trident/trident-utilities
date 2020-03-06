@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QDebug>
 #include <QMessageBox>
+#include <QInputDialog>
 
 // === PUBLIC ===
 mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
@@ -48,9 +49,13 @@ void mainUI::updateConnections(){
   devs.sort();
   QString cdev = ui->combo_conn_devices->currentText();
   ui->combo_conn_devices->clear();
+  bool haswifi = false;
   for(int i=devs.length()-1; i>=0; i--){
-    ui->combo_conn_devices->addItem(QIcon::fromTheme( devs[i].startsWith("wl") ? "network-wireless" : "network-wired-activated"), devs[i]);
+    bool is_wifi = devs[i].startsWith("wl");
+    ui->combo_conn_devices->addItem(QIcon::fromTheme( is_wifi ? "network-wireless" : "network-wired-activated"), devs[i]);
+    haswifi = (haswifi || is_wifi);
   }
+  ui->tab_conn_wifi->setEnabled(haswifi);
   int index = devs.indexOf(cdev);
   if(index>=0){ ui->combo_conn_devices->setCurrentIndex( index); }
 }
@@ -85,19 +90,10 @@ void mainUI::pageChange(QAction *triggered){
 void mainUI::updateConnectionInfo(){
   QString cdev = ui->combo_conn_devices->currentText();
   if(cdev.isEmpty()){ return; } //no devices loaded (yet)
-  QJsonObject config = NETWORK->list_config(cdev);
+  //QJsonObject config = NETWORK->list_config();
   QJsonObject status = NETWORK->current_info(cdev);
   //qDebug() << "Got Info:" << cdev << config;
-  //Adjust the tabs based on type of device
-  if(config.value("network_type").toString()=="wifi"){
-    if(ui->tabs_conn->count()<3){
-      ui->tabs_conn->addTab(ui->tab_conn_wifi, QIcon::fromTheme("network-wireless"), tr("Wifi Networks"));
-    }
-    ui->tab_conn_wifi->setEnabled( status.value("is_up").toBool());
-    QTimer::singleShot(1000, this, SLOT(updateWifiConnections()) );
-  }else if(ui->tabs_conn->count()==3){
-      ui->tabs_conn->removeTab(2);
-  }
+
   // Current status display
   bool running = status.value("is_running").toBool();
   ui->tool_dev_start->setVisible(!running);
@@ -141,20 +137,6 @@ void mainUI::updateConnectionInfo(){
   textblocks.prepend( QString(tr("Current Status: %1")).arg("<i>"+state+"</i>") );
   //ui->text_conn_dev_status->setText(QJsonDocument(status).toJson(QJsonDocument::Indented));
   ui->text_conn_dev_status->setText(textblocks.join(""));
-  //Current config settings
-  if(config.value("network_config").toString()=="dhcp"){
-    ui->radio_conn_dev_dhcp->setChecked(true);
-    ui->group_conn_dev_static->setChecked(false);
-  }else{
-    ui->radio_conn_dev_dhcp->setChecked(false);
-    ui->group_conn_dev_static->setChecked(true);
-  }
-  ui->line_static_v4_address->setText(config.value("ipv4_address").toString());
-  ui->line_static_v4_gateway->setText(config.value("ipv4_gateway").toString());
-  ui->line_static_v4_netmask->setText(config.value("ipv4_netmask").toString());
-  ui->line_static_v6_address->setText(config.value("ipv6_address").toString());
-  ui->line_static_v6_gateway->setText(config.value("ipv6_gateway").toString());
-  ui->line_static_v6_netmask->setText(config.value("ipv6_netmask").toString());
 }
 
 inline QTreeWidgetItem* generateWifi_item(QJsonObject obj){
@@ -162,17 +144,16 @@ inline QTreeWidgetItem* generateWifi_item(QJsonObject obj){
   QString ssid = obj.value("ssid").toString();
   it->setData(0, Qt::UserRole, obj.value("bssid").toString() );
   it->setData(1, Qt::UserRole, obj);
-  it->setText(0, obj.value("signal").toString() );
-  it->setText(1, ssid.isEmpty() ? "[Hidden] "+obj.value("bssid").toString() : ssid);
+  it->setText(1, obj.value("signal").toString() );
+  it->setText(2, ssid.isEmpty() ? "[Hidden] "+obj.value("bssid").toString() : ssid);
   if(obj.value("is_locked").toBool()){ it->setIcon(0, QIcon::fromTheme("password")); }
-  if(obj.value("is_known").toBool()){ it->setIcon(1, QIcon::fromTheme("user_auth")); }
+  if(obj.value("is_known").toBool()){ it->setIcon(2, QIcon::fromTheme("tag")); }
+  if(obj.value("is_active").toBool()){qDebug() << "Active Network:" << obj; it->setIcon(1, QIcon::fromTheme("network-wireless")); }
   return it;
 }
 
 void mainUI::updateWifiConnections(){
-  QString cdev = ui->combo_conn_devices->currentText();
-  if(cdev.isEmpty() || !cdev.startsWith("wl") ){ return; }
-  QJsonObject scan = NETWORK->scan_wifi_networks(cdev);
+  QJsonObject scan = NETWORK->scan_wifi_networks();
   //Make sure the current item stays selected if possible
   QString citem = "";
   if(ui->tree_wifi_networks->currentItem() != 0){
@@ -193,7 +174,8 @@ void mainUI::updateWifiConnections(){
     }else if(info.isArray()){
       QJsonArray arr = info.toArray();
       it = new QTreeWidgetItem();
-      it->setText(1, ssids[i].isEmpty() ? "[Hidden]" : ssids[i]);
+      it->setText(1, "---");
+      it->setText(2, ssids[i].isEmpty() ? "[Hidden]" : ssids[i]);
       it->setData(0, Qt::UserRole, ssids[i]); //Mesh network - identify with the ssid instead of bssid
       for(int a=0; a<arr.count(); a++){
         QTreeWidgetItem *sit = generateWifi_item(arr[a].toObject());
@@ -205,21 +187,14 @@ void mainUI::updateWifiConnections(){
     ui->tree_wifi_networks->addTopLevelItem(it);
   }
 
-  ui->tree_wifi_networks->sortItems(0, Qt::DescendingOrder);
+  ui->tree_wifi_networks->sortItems(1, Qt::DescendingOrder);
   ui->tree_wifi_networks->resizeColumnToContents(0);
+  ui->tree_wifi_networks->resizeColumnToContents(1);
   //Now re-select the item before the refresh if possible
   if(sel!=0){
     ui->tree_wifi_networks->setCurrentItem(sel);
     ui->tree_wifi_networks->scrollToItem(sel);
   }
-}
-
-void mainUI::on_radio_conn_dev_dhcp_toggled(bool on){
-  ui->group_conn_dev_static->setChecked(!on);
-}
-
-void mainUI::on_group_conn_dev_static_clicked(bool on){
-  ui->radio_conn_dev_dhcp->setChecked(!on);
 }
 
 void mainUI::on_tool_dev_restart_clicked(){
@@ -266,14 +241,30 @@ void mainUI::on_tool_connect_wifi_clicked(){
   if(curit == 0){ return; } //nothing selected
   QJsonObject info = curit->data(1, Qt::UserRole).toJsonObject();
   QString id = curit->data(0, Qt::UserRole).toString();
-  if(info.isEmpty()){ return; } //nothing selected
-  QString cdev = ui->combo_conn_devices->currentText();
-  if(cdev.isEmpty()){ return; } //no devices loaded (yet)
-  if(!info.value("is_known").toBool()){
-     //See if we need to save connection info first
-     bool secure = info.value("is_locked").toBool();
-     
+  if(info.isEmpty() || id.isEmpty()){ return; } //nothing selected
+  QJsonArray known = NETWORK->known_wifi_networks();
+  bool is_known = false;
+  //qDebug() << "Connect to wifi:" << info;
+  for(int i=0; i<known.count(); i++){
+    QJsonObject entry = known[i].toObject();
+    //qDebug() << "Check Entry:" << entry;
+    if(entry.value("ssid").toString() == info.value("ssid").toString() || entry.value("bssid").toString() == info.value("bssid").toString() ){
+      is_known = true;
+      id = entry.value("id").toString();
+      break;
+    }
   }
-  NETWORK->connect_to_wifi_network(cdev, id);
+  if(is_known){
+    NETWORK->connect_to_wifi_network(id); //just connect to this known network
+  }else{
+    //See if we need to save connection info first
+    bool secure = info.value("is_locked").toBool();
+    if(secure){
+      QString psk = QInputDialog::getText(this, tr("Wifi Passphrase"), tr("Enter the wifi access point passphrase"), QLineEdit::Password);
+      if(psk.isEmpty()){ return; } //cancelled
+      info.insert("psk",psk);
+    }
+    NETWORK->save_wifi_network(info);
+  }
 
 }

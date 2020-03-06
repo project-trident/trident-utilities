@@ -24,27 +24,15 @@ QStringList Networking::list_devices(){
   return devs;
 }
 
-QJsonObject Networking::list_config(QString device){
-  if(device.isEmpty()){ return QJsonObject(); } //nothing to do - invalid request
-  QStringList words = CmdOutput("sysrc", QStringList() << "-n" << "ifconfig_"+device).section("\n",0,0).split(" ", QString::SkipEmptyParts);
+QJsonObject Networking::list_config(){
   QJsonObject obj;
-  //Type of network
-  obj.insert("network_type" , device.startsWith("wl") ? "wifi" : "lan");
-  if(!words.isEmpty() && words.filter("DHCP").isEmpty()){
-    obj.insert("network_config", "manual");
-    int index = words.indexOf("inet");
-    if(index>=0 && words.length() > index+1){ obj.insert("ipv4_address", words[index+1]); }
-    index = words.indexOf("netmask");
-    if(index>=0 && words.length() > index+1){ obj.insert("ipv4_netmask", words[index+1]); }
-    index = words.indexOf("inet6");
-    if(index>=0 && words.length() > index+1){ obj.insert("ipv6_address", words[index+1]); }
-    //Also fetch the defaultrouter and put that in as the gateway
-    QString defrouter = CmdOutput("sysrc", QStringList() << "-n" << "defaultrouter").simplified();
-    obj.insert("ipv4_gateway", defrouter);
+  // Need to read /etc/dhcpcd.conf and pull out all profile entries
+  // Example entry
+  // arping 192.168.0.1
+  // profile 192.168.0.1
+  // static ip_address=192.168.0.10/24
+  // static routers=192.168.0.1
 
-  }else{
-    obj.insert("network_config", "dhcp");
-  }
   return obj;
 }
 
@@ -103,8 +91,8 @@ QJsonObject Networking::current_info(QString device){
   return obj;
 }
 
-bool Networking::set_config(QString device, QJsonObject config){
-  qDebug() << "set Config:" << device << config;
+bool Networking::set_config(QJsonObject config){
+  qDebug() << "set Config:" << config;
   return false;
 }
 
@@ -115,13 +103,13 @@ Networking::State Networking::deviceState(QString device){
   else{ return StateStopped; }
 }
 
-QJsonObject Networking::scan_wifi_networks(QString device){
-  qDebug() << "Scan for Wifi:" << device;
-  QStringList known = known_wifi_networks();
-  CmdOutput("wpa_cli", QStringList() << "-i" << device << "scan");
-  QThread::sleep(2);
-  QStringList lines = CmdOutput("wpa_cli", QStringList() << "-i" << device << "scan_results" ).split("\n");
-  qDebug() << "Got wifi scan:" << lines;
+QJsonObject Networking::scan_wifi_networks(){
+  //qDebug() << "Scan for Wifi:" << device;
+  QJsonArray known = known_wifi_networks();
+  CmdOutput("wpa_cli", QStringList() << "scan");
+  QThread::sleep(5);
+  QStringList lines = CmdOutput("wpa_cli", QStringList() << "scan_results" ).split("\n");
+  //qDebug() << "Got wifi scan:" << lines;
   QJsonObject out;
   for(int i=1; i<lines.length(); i++){ //first line is column headers
     if(lines[i].simplified().isEmpty()){ continue; }
@@ -129,14 +117,16 @@ QJsonObject Networking::scan_wifi_networks(QString device){
     QJsonObject tmp;
     QString ssid = lines[i].section("\t",-1).simplified();
     QString bssid = lines[i].section("\t",0,0, QString::SectionSkipEmpty);
+    if( !bssidRegex.exactMatch(bssid) ){ continue; }
     tmp.insert("ssid", ssid);
     tmp.insert("bssid", bssid);
     tmp.insert("freq",  lines[i].section("\t",1,1, QString::SectionSkipEmpty));
     int sig = lines[i].section("\t",2,2, QString::SectionSkipEmpty).simplified().toInt();
     tmp.insert("sig_db_level", sig);
-    if(sig>0){ sig = 0; } //should always be negative
-    if(sig<-100){ sig = -100; } //just set the minimum here so it gets seen as "0%"
-    int sigpercent = qAbs(100 + sig); //quick and dirty percentage: 100% - signal level (sig level always negative)
+    //Quick and dirty percent: assume -80DB for noise, and double the difference between Sig/Noise
+    int sigpercent = (sig+80) *2;
+    if(sigpercent<0){ sigpercent = 0; }
+    else if(sigpercent>100){ sigpercent = 100; }
     if(sigpercent<10){ tmp.insert("signal", "00"+QString::number(sigpercent)+"%"); }
     else if(sigpercent<100){ tmp.insert("signal", "0"+QString::number(sigpercent)+"%"); }
     else{ tmp.insert("signal", QString::number(sigpercent)+"%"); }
@@ -145,7 +135,19 @@ QJsonObject Networking::scan_wifi_networks(QString device){
     //for(int j=6; j<columns.length(); j++){ cap << columns[j].split(" ", QString::SkipEmptyParts); }
     tmp.insert("capabilities", QJsonArray::fromStringList(cap));
     tmp.insert("is_locked", !cap.filter("WPA").isEmpty());
-    tmp.insert("is_known", known.contains(ssid) || known.contains(tmp.value("bssid").toString()) );
+    bool is_known = false;
+    bool is_active = false;
+    for(int i=0; i<known.count(); i++){
+      QJsonObject obj = known[i].toObject();
+      if(obj.value("bssid").toString()==bssid){ is_known = true; }
+      else if(!obj.contains("bssid") && obj.value("ssid").toString() == ssid){ is_known = true; }
+      if(is_known){
+        //Also see if this access point is currently active
+        if(obj.value("id").toString() == activeNetworkID){ is_active = true; }
+      }
+    }
+    tmp.insert("is_known", is_known);
+    tmp.insert("is_active", is_active);
     if(out.contains(ssid)){
       //Convert this to an array of access points with the same ssid
       QJsonArray arr;
@@ -157,102 +159,80 @@ QJsonObject Networking::scan_wifi_networks(QString device){
       out.insert(ssid, tmp); //first object with this ssid
     }
   }
-  qDebug() << "Wifi:" << out;
+  //qDebug() << "Wifi:" << out;
   return out;
 }
 
-QStringList Networking::known_wifi_networks(){
-  static QStringList idcache;
+QJsonArray Networking::known_wifi_networks(){
+  static QJsonArray idcache;
   static QDateTime cachecheck;
   QDateTime lastMod = QFileInfo("/etc/wpa_supplicant/wpa_supplicant.conf").lastModified();
   if(cachecheck.isNull() || (lastMod > cachecheck) ){
     //Need to re-read the file to assemble the list of ID's.
-    idcache.clear();
-    QStringList contents = readFile("/etc/wpa_supplicant/wpa_supplicant.conf");
+    idcache = QJsonArray();
+    QStringList contents = CmdOutput("wpa_cli", QStringList() << "list_networks").split("\n");
     cachecheck = QDateTime::currentDateTime();
     //qDebug() << "WPA Contents:" <<  contents;
-    bool inblock=false;
     for(int i=0; i<contents.length(); i++){
-      QString line = contents[i].simplified();
-      if(!inblock && line.startsWith("network") && line.endsWith("{" )){ inblock = true; }
-      else if(inblock && line.startsWith("}") ){ inblock = false; }
-      else if(inblock){
-        QString key = line.section("=",0,0).simplified();
-        if(key == "ssid" || key =="bssid"){ idcache << line.section("=\"",-1).section("\"",0,0); }
-      }
+      QStringList elems = contents[i].split("\t");
+      // Elements: [ network id, ssid, bssid, flags]
+      if(elems.length() < 3){ continue; } //not a valid entry line
+      QJsonObject obj;
+        obj.insert("id", elems[0]);
+        obj.insert("ssid", elems[1]);
+        if(elems[2] != "any"){ obj.insert("bssid", elems[2]); }
+        if( (elems.length()>=4) && contents[i].contains("[CURRENT]") ){
+          activeNetworkID = elems[0];
+        }
+      idcache << obj;
     }
+    qDebug() << "Known wifi networks:" << idcache;
   }
-  qDebug() << "Known wifi networks:" << idcache;
+
   return idcache;
 }
 
-bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
-  static QStringList exclude_quotes;
-  qDebug() << "Save Wifi Network:" << obj << clearonly;
-  if(exclude_quotes.isEmpty()){ exclude_quotes << "key_mgmt" << "eap" << "proto"; }
-  QString id = obj.value("bssid").toString();
-  QString ssid = obj.value("ssid").toString();
-  if(id.isEmpty()){ id = ssid; }
-  if(id.isEmpty()){ return false; }
-  QStringList contents = readFile("/etc/wpa_supplicant/wpa_supplicant.conf");
-  if(contents.isEmpty()){ contents << "ctrl_interface=/var/run/wpa_supplicant"; }
-    //Need to remove the currently-saved entry first
-    QStringList tmp = contents.join("\n").split("{");
-    for(int i=0; i<tmp.length(); i++){
-      if(tmp[i].contains("=\""+id+"\"") || tmp[i].contains("=\""+ssid+"\"") ){
-        tmp.removeAt(i);
-        if(i>=tmp.length()){
-          //Need to remove the last piece of the network= section
-          tmp[i-1] = tmp[i-1].section("network=",0,-2);
-        }else{ i--; }
-      }
-    }
-    contents = tmp.join("{").split("\n");
-  if(!clearonly){
-    if(!contents.last().isEmpty()){ contents<<""; }
-    //Now add the new entry to the file contents
-    contents << "network={";
-    QStringList keys = obj.keys();
-    for(int i=0; i<keys.length(); i++){
-      QJsonValue val = obj.value(keys[i]);
-      QString sval;
-      if(val.isString()){
-        if(exclude_quotes.contains(keys[i])){ sval = val.toString(); }
-        else{ sval = "\""+val.toString()+"\""; }
-      } else if(val.isDouble()){ sval = QString::number(val.toInt()); }
-      else if(val.isBool()){ sval = QString::number(val.toInt()); }
+QString Networking::active_wifi_network(){
+  return activeNetworkID;
+}
 
-      if(!sval.isEmpty()){ contents << "  "+keys[i]+"="+sval; }
+bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
+  qDebug() << "Save Wifi Network:" << obj << clearonly;
+  QString id = obj.value("id").toString();
+  QString ssid = obj.value("ssid").toString();
+  QString bssid = obj.value("bssid").toString();
+  QString password = obj.value("psk").toString();
+  if(ssid.isEmpty() && bssid.isEmpty() && !clearonly){ return false; }
+  else if(id.isEmpty() && clearonly){ return false; }
+  bool ok = true;
+  if(clearonly) {
+    ok = CmdReturn("wpa_cli", QStringList() << "remove_network" << id);
+  }else{
+    if(id.isEmpty()){
+      //Need to get a new ID
+      id = CmdOutput("wpa_cli", QStringList() << "add_network").section("\n",-1,QString::SectionSkipEmpty);
     }
-    contents << "}";
+    if(!ssid.isEmpty()){ ok = CmdReturn("wpa_cli", QStringList() << "set_network" << id << "ssid" << "\""+ssid+"\""); }
+    if(!bssid.isEmpty() && ok){ ok = CmdReturn("wpa_cli", QStringList() << "set_network" << id << "bssid" << "\""+bssid+"\""); }
+    if(!password.isEmpty() && ok){ ok = CmdReturn("wpa_cli", QStringList() << "set_network" << id << "psk" << "\""+password+"\""); }
   }
-  bool ok = writeFile("/etc/wpa_supplicant/wpa_supplicant.conf", contents);
-  if(ok){CmdReturn("wpa_cli", QStringList() << "reconfigure"); } //have it re-read the config file
+  if(ok){CmdReturn("wpa_cli", QStringList() << "save_config"); } //have it sync to disk
+  if(!clearonly){ connect_to_wifi_network(id); }
   return ok;
 }
 
 bool Networking::remove_wifi_network(QString id){
   //Note - it is better to call the save_wifi_network with the clear flag, can filter by ssid AND bssid in one pass
   QJsonObject obj;
-  obj.insert("bssid", id); //does not matter if bssid or ssid right now. same removal process for both
+  obj.insert("id", id);
   return save_wifi_network(obj, true); //remove only
 }
 
-bool Networking::connect_to_wifi_network(QString device, QString id){
-  //ssid or bssid
-  if(!device.startsWith("wlan")){ return false; } //not a wifi device
-  int ret = -1;
-  if(bssidRegex.exactMatch(id)){
-    ret = CmdReturn("ifconfig", QStringList() << device << "bssid" << id );
-  } else {
-    ret = CmdReturn("ifconfig", QStringList() << device << "ssid" << id );
-  }
-  if(ret == 0 ){
-    //Now need to tell the device to re-connect to the new [b]ssid
-    return setDeviceState(device, StateRestart);
-  }else{
-    return false;
-  }
+bool Networking::connect_to_wifi_network(QString id){
+  bool ok = CmdReturn("wpa_cli", QStringList() << "select_network" << id);
+  if(ok){ activeNetworkID = id; }
+  qDebug() << "Connect to wifi:" << id << ok;
+  return ok;
 }
 
 //General Purpose functions
@@ -312,19 +292,19 @@ bool Networking::setDeviceState(QString device, State stat){
     case StateRunning:
       //Start the network device
       qDebug() << "Starting network device:" << device;
-      ok = (CmdReturn("ifconfig", QStringList() << device << "up") == 0);
+      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "up") == 0);
       break;
     case StateStopped:
       //Stop the network device
       qDebug() << "Stopping network device:" << device;
-      ok = (CmdReturn("ifconfig", QStringList() << device << "down") == 0);
+      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "down") == 0);
       break;
     case StateRestart:
       //Restart the network device
       qDebug() << "Restarting network device:" << device;
-      ok = (CmdReturn("ifconfig", QStringList() << device << "down") == 0);
+      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "down") == 0);
       QThread::sleep(1);
-      ok = (CmdReturn("ifconfig", QStringList() << device << "up") == 0);
+      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "up") == 0);
       break;
     case StateUnknown:
       break; //do nothing

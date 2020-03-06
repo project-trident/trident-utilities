@@ -27,17 +27,18 @@ public:
 	~Networking();
 
 	QStringList list_devices();
-	QJsonObject list_config(QString device);
+	QJsonObject list_config();
 	QJsonObject current_info(QString device);
-	bool set_config(QString device, QJsonObject config);
+	bool set_config(QJsonObject config);
 	State deviceState(QString device);
 
 	// Wifi specific functionality
-	QJsonObject scan_wifi_networks(QString device);
-	QStringList known_wifi_networks();
-	bool save_wifi_network(QJsonObject, bool clearonly = false);
+	QJsonObject scan_wifi_networks();
+	QJsonArray known_wifi_networks();
+	QString active_wifi_network();
+	bool save_wifi_network(QJsonObject obj, bool clearonly = false);
 	bool remove_wifi_network(QString id);
-	bool connect_to_wifi_network(QString device, QString id); //ssid or bssid
+	bool connect_to_wifi_network(QString id); //ssid or bssid
 
 	//General Purpose functions
 	QStringList readFile(QString path);
@@ -45,6 +46,7 @@ public:
 
 private:
 	QNetworkConfigurationManager *NETMAN;
+	QString activeNetworkID; //try to use bssid when possible, ssid otherwise
 
 	QString CmdOutput(QString proc, QStringList args);
 	int CmdReturn(QString proc, QStringList args);
