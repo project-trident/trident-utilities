@@ -33,33 +33,38 @@ public:
 	State deviceState(QString device);
 
 	// Wifi specific functionality
-	QJsonObject scan_wifi_networks();
+	QJsonObject wifi_scan_results();
 	QJsonArray known_wifi_networks();
-	QString active_wifi_network();
+	QJsonObject active_wifi_network();
+	bool is_known(QJsonObject obj);
+
 	bool save_wifi_network(QJsonObject obj, bool clearonly = false);
 	bool remove_wifi_network(QString id);
-	bool connect_to_wifi_network(QString id); //ssid or bssid
+	bool connect_to_wifi_network(QString id, bool noretry = false); //known network ID number
 
 	//General Purpose functions
-	QStringList readFile(QString path);
-	bool writeFile(QString path, QStringList contents);
+	static QStringList readFile(QString path);
+	static bool writeFile(QString path, QStringList contents);
+	static bool sameNetwork(QJsonObject A, QJsonObject B);
 
 private:
 	QNetworkConfigurationManager *NETMAN;
-	QString activeNetworkID; //try to use bssid when possible, ssid otherwise
+	QJsonObject last_wifi_scan;
 
 	QString CmdOutput(QString proc, QStringList args);
 	int CmdReturn(QString proc, QStringList args);
-	//QJsonObject LatestScanResults(QString device);
+	void performWifiScan(); //designed to be run in a separate thread
+	void parseWifiScanResults(QStringList info);
 
 public slots:
 	bool setDeviceState(QString device, State stat);
-	//void startWifiScan(QString device);
+	void startWifiScan();
 
 private slots:
-	//void readWifiScanResults();
 
 signals:
-	void NewWifiScanResults(QString);
+	void starting_wifi_scan();
+	void new_wifi_scan_results();
+	void finished_wifi_scan();
 };
 #endif

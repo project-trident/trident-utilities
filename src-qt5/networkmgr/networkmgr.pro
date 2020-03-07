@@ -1,4 +1,4 @@
-QT       += core gui widgets network
+QT       += core gui widgets network concurrent
 
 TARGET = trident-networkmgr
 target.path = /usr/bin
