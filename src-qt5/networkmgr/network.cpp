@@ -26,15 +26,41 @@ QStringList Networking::list_devices(){
 }
 
 QJsonObject Networking::list_config(){
-  QJsonObject obj;
+  QStringList lines = readFile("/etc/dhcpcd.conf");
   // Need to read /etc/dhcpcd.conf and pull out all profile entries
   // Example entry
   // arping 192.168.0.1
   // profile 192.168.0.1
   // static ip_address=192.168.0.10/24
   // static routers=192.168.0.1
+  bool inblock = false;
 
-  return obj;
+  QJsonObject out;
+  QJsonObject obj;
+  for(int i=0; i<lines.length(); i++){
+    if(lines[i].startsWith("arping ")){
+      QJsonArray checks = out.value("pings").toArray();
+      QStringList tmp = lines[i].section(" ",1,-1).split(" ", QString::SkipEmptyParts);
+      for(int j=0; j<tmp.length(); j++){ checks << tmp[j]; }
+      out.insert("pings", checks);
+    }else if(lines[i].startsWith("profile ") ){
+        //Starting a profile block
+        inblock = true;
+        obj.insert("profile", lines[i].section(" ",1,1));
+    }else if(inblock){
+      if(lines[i].startsWith("#") || lines[i].simplified().isEmpty()){
+        //End of profile block - save it to the output object
+        inblock = false;
+        out.insert(obj.value("profile").toString(), obj);
+        obj = QJsonObject();
+      }else if(lines[i].startsWith("static ") ){
+        //value within a profile block
+        QString key = lines[i].section(" ",1,-1).section("=",0,0).simplified();
+        obj.insert(key, lines[i].section("=",1,-1).simplified());
+      }
+    }
+  }
+  return out;
 }
 
 QJsonObject Networking::current_info(QString device){

@@ -50,19 +50,26 @@ void mainUI::newInputs(QStringList args){
 // === PRIVATE ===
 //Initial page loading (on page change)
 void mainUI::updateConnections(){
+  qDebug() << "Update Connections";
   QStringList devs = NETWORK->list_devices();
+  static QStringList lastdevs;
+  if(devs == lastdevs){ return; } //no change
+  lastdevs = devs;
   devs.sort();
   QString cdev = ui->combo_conn_devices->currentText();
   ui->combo_conn_devices->clear();
   bool haswifi = false;
-  for(int i=devs.length()-1; i>=0; i--){
+  int index = -1;
+  for(int i=0; i<devs.length(); i++){
+    if(devs[i].isEmpty()){ continue; }
     bool is_wifi = devs[i].startsWith("wl");
     ui->combo_conn_devices->addItem(QIcon::fromTheme( is_wifi ? "network-wireless" : "network-wired-activated"), devs[i]);
     haswifi = (haswifi || is_wifi);
+    if(cdev == devs[i]){ index = i; }
+    else if(cdev.isEmpty() && is_wifi){ index = i; }
   }
   ui->tab_conn_wifi->setEnabled(haswifi);
-  int index = devs.indexOf(cdev);
-  if(index>=0){ ui->combo_conn_devices->setCurrentIndex( index); }
+  if(index>=0){ ui->combo_conn_devices->setCurrentIndex(index); }
   if(cdev.isEmpty() && haswifi){
     //First time loading the device list - go ahead and start a wifi scan in the background
     QTimer::singleShot(500, NETWORK, SLOT(startWifiScan()));
