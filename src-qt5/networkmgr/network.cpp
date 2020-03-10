@@ -5,6 +5,7 @@
 
 static QRegExp ip4regex = QRegExp("([0-9]{1,3}\\.){3}[0-9]{1,3}");
 static QRegExp bssidRegex = QRegExp("([^:]{2}:){5}[^:]{2}");
+static QString DHCPConf = "/etc/dhcpcd.conf";
 
 Networking::Networking(QObject *parent) : QObject(parent){
   NETMAN = new QNetworkConfigurationManager(this);
@@ -26,7 +27,7 @@ QStringList Networking::list_devices(){
 }
 
 QJsonObject Networking::list_config(){
-  QStringList lines = readFile("/etc/dhcpcd.conf");
+  QStringList lines = readFile(DHCPConf);
   // Need to read /etc/dhcpcd.conf and pull out all profile entries
   // Example entry
   // arping 192.168.0.1
@@ -120,7 +121,55 @@ QJsonObject Networking::current_info(QString device){
 
 bool Networking::set_config(QJsonObject config){
   qDebug() << "set Config:" << config;
-  return false;
+  // Example entry
+  // arping 192.168.0.1 192.168.1.1
+  // profile 192.168.0.1
+  // static ip_address=192.168.0.10/24
+  // static routers=192.168.0.1
+  //
+  // profile 192.168.1.1
+  // static ip_address=192.168.1.10/24
+  // static routers=192.168.1.1
+  QStringList contents = readFile(DHCPConf);
+  int startindex = -1;
+  for(int i=0; i<contents.length(); i++){
+    if(contents[i].startsWith("# -- Trident-networkmgr config below --")){
+      startindex = i-1; break; //make sure we "start" one line above this
+    }
+  }
+  bool changed = false;
+  if(startindex>=0){
+    changed = true; //have to delete entries from the end of the file
+    // Delete the end of the file as needed - gets replaced in a moment
+    for(int i=contents.length()-1; i>startindex; i--){ contents.removeAt(i); }
+  }
+  if(!config.keys().isEmpty()){
+    changed = true; //have to add entries to the bottom of the file
+    contents << "# -- Trident-networkmgr config below --";
+    contents << "# -- Place all manual changes above this --";
+    QStringList pings = config.keys();
+    contents << "arping "+pings.join(" ");
+    for(int i=0; i<pings.length(); i++){
+      QJsonObject profile = config.value(pings[i]).toObject();
+      if(profile.isEmpty() || !profile.contains("profile") ){ continue; }
+      contents << "";
+      contents << "profile " +profile.value("profile").toString();
+      if(profile.contains("ip_address")){ contents << "static ip_address "+profile.value("ip_address").toString(); }
+      if(profile.contains("routers")){ contents << "static routers "+profile.value("routers").toString(); }
+    }
+  }
+  if(!changed){ return true; } //nothing to do.
+  if(contents.last() != ""){ contents << ""; } //always leave a blank line at the end
+
+  // Now save the new config file and update dhcpcd to use it
+  QString tmpfile = "/tmp/.tmp.dhcpcd.conf";
+  static QString enablebin = QCoreApplication::applicationDirPath()+"/trident-enable-dhcpcdconf";
+  bool ok = writeFile(tmpfile, contents);
+  if(ok){
+    ok = CmdReturn("qsudo", QStringList() << enablebin << tmpfile);
+  }
+  if(QFile::exists(tmpfile)){ QFile::remove(tmpfile); } //clean up if needed
+  return ok;
 }
 
 Networking::State Networking::deviceState(QString device){
@@ -229,6 +278,7 @@ bool Networking::connect_to_wifi_network(QString id, bool noretry){
     QThread::sleep(1);
     ok = connect_to_wifi_network(id, true); //do not re-try again
   }
+  if(ok){ CmdReturn("wpa_cli", QStringList() << "save_config"); } //go ahead and update config
   return ok;
 }
 

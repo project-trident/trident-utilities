@@ -14,11 +14,14 @@ HEADERS  += mainUI.h \
 
 FORMS    += mainUI.ui
 
-sudoconf.files = sudoers.d/trident-networkmgr
-sudoconf.path = /etc/sudoers.d
+#sudoconf.files = sudoers.d/trident-networkmgr
+#sudoconf.path = /etc/sudoers.d
 
 desktop.files = trident-networkmgr.desktop
-desktop.path = /usr/local/share/applications
+desktop.path = /usr/share/applications
+
+scripts.files = trident-enable-dhcpcdconf
+scripts.path = /usr/bin
 
 include(../common/SingleApp.pri)
 
@@ -86,8 +89,8 @@ TRANSLATIONS =  i18n/tri-nmgr_af.ts \
                 i18n/tri-nmgr_zh_TW.ts \
                 i18n/tri-nmgr_zu.ts
 
-dotrans.path=/usr/local/share/trident-networkmgr/i18n/
-dotrans.extra=cd $$PWD/i18n && lrelease -nounfinished *.ts && cp *.qm $(INSTALL_ROOT)/usr/local/share/trident-networkmgr/i18n/
+dotrans.path=/usr/share/trident-networkmgr/i18n/
+dotrans.extra=cd $$PWD/i18n && lrelease -nounfinished *.ts && cp *.qm $(INSTALL_ROOT)/usr/share/trident-networkmgr/i18n/
 
 #Some conf to redirect intermediate stuff in separate dirs
 UI_DIR=./.build/ui/
@@ -96,4 +99,4 @@ OBJECTS_DIR=./.build/obj
 RCC_DIR=./.build/rcc
 QMAKE_DISTCLEAN += -r ./.build
 
-INSTALLS += target dotrans sudoconf desktop
+INSTALLS += target dotrans scripts desktop

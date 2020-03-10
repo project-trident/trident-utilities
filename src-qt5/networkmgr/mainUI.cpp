@@ -91,6 +91,7 @@ void mainUI::pageChange(QAction *triggered){
   if(triggered == ui->actionConnections){
 	ui->stackedWidget->setCurrentWidget(ui->page_connections);
 	updateConnections();
+        loadStaticProfiles();
   }else if(triggered == ui->actionFirewall ){
 	ui->stackedWidget->setCurrentWidget(ui->page_firewall);
 	updateFirewall();
@@ -330,4 +331,71 @@ void mainUI::starting_wifi_scan(){
 
 void mainUI::finished_wifi_scan(){
   ui->tool_wifi_refresh->setEnabled(true);
+}
+
+void mainUI::loadStaticProfiles(){
+
+  on_combo_conn_static_profile_currentIndexChanged(-1);
+}
+
+void mainUI::on_tool_conn_profile_apply_clicked(){
+  QJsonObject out;
+  for(int i=0; i<ui->combo_conn_static_profile->count(); i++){
+    QJsonObject obj = ui->combo_conn_static_profile->itemData(i).toJsonObject();
+    out.insert(obj.value("profile").toString(), obj);
+  }
+  bool ok = NETWORK->set_config(out);
+  if(!ok){
+    QMessageBox::warning(this, tr("Error"), tr("Could not save static IP settings!"));
+  }
+}
+
+void mainUI::on_tool_conn_new_profile_clicked(){
+  QString profile = QInputDialog::getText(this, tr("New static profile"), tr("Sentinal IP address:"));
+  if(profile.isEmpty()){ return; } //cancelled
+  //Check if it is an IPv4 address
+
+  //Check if it already exists as a profile
+
+  //Add it to the profile list
+  QJsonObject obj;
+  obj.insert("profile", profile);
+  ui->combo_conn_static_profile->addItem(profile, obj);
+}
+
+void mainUI::on_tool_conn_remove_profile_clicked(){
+  int index = ui->combo_conn_static_profile->currentIndex();
+  if(index>=0){ ui->combo_conn_static_profile->removeItem(index); }
+}
+
+void mainUI::on_combo_conn_static_profile_currentIndexChanged(int){
+  int index = ui->combo_conn_static_profile->currentIndex();
+  ui->tool_conn_remove_profile->setVisible(index>=0);
+  ui->line_static_v4_address->setEnabled(index>=0);
+  ui->line_static_v4_gateway->setEnabled(index>=0);
+  if( index<0 ){
+    //No profiles available
+    ui->line_static_v4_address->clear();
+    ui->line_static_v4_gateway->clear();
+  }else{
+    QJsonObject info = ui->combo_conn_static_profile->currentData().toJsonObject();
+    ui->line_static_v4_address->setText(info.value("ip_address").toText());
+    ui->line_static_v4_gateway->clear(info.value("routers").toText());
+  }
+}
+
+void mainUI::on_line_static_v4_address_textEdited(const QString &text){
+  int index = ui->combo_conn_static_profile->currentIndex();
+  if(index < 0){ return; } //nothing to do
+  QJsonObject info = ui->combo_conn_static_profile->currentData().toJsonObject();
+    info.insert("ip_address", ui->line_static_v4_address->text());
+  ui->combo_conn_static_profile->setItemData(index, info);
+}
+
+void mainUI::on_line_static_v4_gateway_textEdited(const QString &text){
+  int index = ui->combo_conn_static_profile->currentIndex();
+  if(index < 0){ return; } //nothing to do
+  QJsonObject info = ui->combo_conn_static_profile->currentData().toJsonObject();
+    info.insert("routers", ui->line_static_v4_address->text());
+  ui->combo_conn_static_profile->setItemData(index, info);
 }

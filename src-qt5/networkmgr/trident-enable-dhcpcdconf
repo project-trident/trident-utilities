@@ -1,0 +1,35 @@
+#!/bin/bash
+#-----------------------
+# Simple script to copy over and enable a new dhcpcd.conf file
+# This is the only piece where root permissions are needed
+#  and prevents prompting for permission more than once.
+#------------------------
+# Distributed as part of the trident-networkmgr utility
+# http://project-trident.org
+#------------------------
+#Inputs: 
+#   $1 : location of the new dhcpcd.conf file to use.
+if [ ! -f "$1" ] || [ -z "$1" ] || [ $(id -u) -ne 0 ] ; then
+  #File does not exist or not provided
+  exit 1
+fi
+
+#Check the 
+mv -f "/etc/dhcpcd.conf" "/etc/dhcpcd.conf.prev"
+if [ $? -ne 0 ] ; then
+  exit 1
+fi
+mv -f "$1" "/etc/dhcpcd.conf"
+retcode=$?
+if [ ${retcode} -eq 0 ] ; then
+  chmod 644 "/etc/dhcpcd.conf"
+  dhcpcd --rebind
+  retcode=$?
+fi
+
+if [ ${retcode} -ne 0 ] ; then
+  #Had an error, restore the previously-working config file
+  mv -f "/etc/dhcpcd.conf.prev" "/etc/dhcpcd.conf"
+  dhcpcd --rebind
+fi
+exit ${retcode}
