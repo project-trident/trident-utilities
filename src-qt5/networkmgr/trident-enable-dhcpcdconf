@@ -22,6 +22,7 @@ fi
 mv -f "$1" "/etc/dhcpcd.conf"
 retcode=$?
 if [ ${retcode} -eq 0 ] ; then
+  chown root:root "/etc/dhcpcd.conf"
   chmod 644 "/etc/dhcpcd.conf"
   dhcpcd --rebind
   retcode=$?

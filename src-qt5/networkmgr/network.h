@@ -52,7 +52,8 @@ private:
 	QJsonObject last_wifi_scan;
 
 	QString CmdOutput(QString proc, QStringList args);
-	int CmdReturn(QString proc, QStringList args);
+	int CmdReturnCode(QString proc, QStringList args);
+	bool CmdReturn(QString proc, QStringList args);
 	void performWifiScan(); //designed to be run in a separate thread
 	void parseWifiScanResults(QStringList info);
 

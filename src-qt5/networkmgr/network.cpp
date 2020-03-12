@@ -61,6 +61,11 @@ QJsonObject Networking::list_config(){
       }
     }
   }
+  if(!obj.isEmpty()){
+    //Last item might not reach the end tag. Add it in if not empty at this point
+    out.insert(obj.value("profile").toString(), obj);
+  }
+  //qDebug() << "Read Config:" << out << obj;
   return out;
 }
 
@@ -120,7 +125,7 @@ QJsonObject Networking::current_info(QString device){
 }
 
 bool Networking::set_config(QJsonObject config){
-  qDebug() << "set Config:" << config;
+  //qDebug() << "set Config:" << config;
   // Example entry
   // arping 192.168.0.1 192.168.1.1
   // profile 192.168.0.1
@@ -154,8 +159,8 @@ bool Networking::set_config(QJsonObject config){
       if(profile.isEmpty() || !profile.contains("profile") ){ continue; }
       contents << "";
       contents << "profile " +profile.value("profile").toString();
-      if(profile.contains("ip_address")){ contents << "static ip_address "+profile.value("ip_address").toString(); }
-      if(profile.contains("routers")){ contents << "static routers "+profile.value("routers").toString(); }
+      if(profile.contains("ip_address")){ contents << "static ip_address="+profile.value("ip_address").toString(); }
+      if(profile.contains("routers")){ contents << "static routers="+profile.value("routers").toString(); }
     }
   }
   if(!changed){ return true; } //nothing to do.
@@ -166,7 +171,9 @@ bool Networking::set_config(QJsonObject config){
   static QString enablebin = QCoreApplication::applicationDirPath()+"/trident-enable-dhcpcdconf";
   bool ok = writeFile(tmpfile, contents);
   if(ok){
+    //qDebug() << "Save config:" << enablebin << tmpfile << QFile::exists(tmpfile);
     ok = CmdReturn("qsudo", QStringList() << enablebin << tmpfile);
+    //qDebug() << "Got save config return:" << ok;
   }
   if(QFile::exists(tmpfile)){ QFile::remove(tmpfile); } //clean up if needed
   return ok;
@@ -332,11 +339,16 @@ QString Networking::CmdOutput(QString proc, QStringList args){
   return P.readAll();
 }
 
-int Networking::CmdReturn(QString proc, QStringList args){
+int Networking::CmdReturnCode(QString proc, QStringList args){
   QProcess P;
     P.start(proc, args);
     P.waitForFinished();
   return P.exitCode();
+}
+
+bool Networking::CmdReturn(QString proc, QStringList args){
+  int retcode = CmdReturnCode(proc,args);
+  return (retcode == 0);
 }
 
 void Networking::performWifiScan(){

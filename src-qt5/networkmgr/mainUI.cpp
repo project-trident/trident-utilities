@@ -334,7 +334,18 @@ void mainUI::finished_wifi_scan(){
 }
 
 void mainUI::loadStaticProfiles(){
-
+  QJsonObject settings = NETWORK->list_config();
+  QStringList keys = settings.keys();
+  QString curkey = ui->combo_conn_static_profile->currentText();
+  ui->combo_conn_static_profile->clear();
+  int index = -1;
+  for(int i=0; i<keys.length(); i++){
+    QJsonObject obj = settings.value(keys[i]).toObject();
+    if(obj.isEmpty()){ continue; }
+    ui->combo_conn_static_profile->addItem(keys[i], obj);
+    if(keys[i] == curkey){ index = i; }
+  }
+  if(index>=0){ ui->combo_conn_static_profile->setCurrentIndex(index); }
   on_combo_conn_static_profile_currentIndexChanged(-1);
 }
 
@@ -348,6 +359,7 @@ void mainUI::on_tool_conn_profile_apply_clicked(){
   if(!ok){
     QMessageBox::warning(this, tr("Error"), tr("Could not save static IP settings!"));
   }
+  QTimer::singleShot(50, this, SLOT(updateConnectionInfo()) );
 }
 
 void mainUI::on_tool_conn_new_profile_clicked(){
@@ -379,8 +391,8 @@ void mainUI::on_combo_conn_static_profile_currentIndexChanged(int){
     ui->line_static_v4_gateway->clear();
   }else{
     QJsonObject info = ui->combo_conn_static_profile->currentData().toJsonObject();
-    ui->line_static_v4_address->setText(info.value("ip_address").toText());
-    ui->line_static_v4_gateway->clear(info.value("routers").toText());
+    ui->line_static_v4_address->setText(info.value("ip_address").toString());
+    ui->line_static_v4_gateway->setText(info.value("routers").toString());
   }
 }
 
@@ -388,7 +400,7 @@ void mainUI::on_line_static_v4_address_textEdited(const QString &text){
   int index = ui->combo_conn_static_profile->currentIndex();
   if(index < 0){ return; } //nothing to do
   QJsonObject info = ui->combo_conn_static_profile->currentData().toJsonObject();
-    info.insert("ip_address", ui->line_static_v4_address->text());
+    info.insert("ip_address", text);
   ui->combo_conn_static_profile->setItemData(index, info);
 }
 
@@ -396,6 +408,6 @@ void mainUI::on_line_static_v4_gateway_textEdited(const QString &text){
   int index = ui->combo_conn_static_profile->currentIndex();
   if(index < 0){ return; } //nothing to do
   QJsonObject info = ui->combo_conn_static_profile->currentData().toJsonObject();
-    info.insert("routers", ui->line_static_v4_address->text());
+    info.insert("routers", text);
   ui->combo_conn_static_profile->setItemData(index, info);
 }
