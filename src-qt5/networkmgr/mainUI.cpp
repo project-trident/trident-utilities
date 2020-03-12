@@ -27,6 +27,14 @@ mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
   connect(ui->combo_conn_devices, SIGNAL(currentIndexChanged(int)), this, SLOT(updateConnectionInfo()) );
   connect(ui->tool_conn_status_refresh, SIGNAL(clicked()), this, SLOT(updateConnectionInfo()) );
 
+  //Ensure all the page actions are full-width
+  this->show();
+  QApplication::processEvents();
+  int wid = ui->toolBar->width();
+  ui->toolBar->widgetForAction(ui->actionConnections)->setMinimumWidth(wid);
+  ui->toolBar->widgetForAction(ui->actionFirewall)->setMinimumWidth(wid);
+  ui->toolBar->widgetForAction(ui->actionVPN)->setMinimumWidth(wid);
+  ui->toolBar->widgetForAction(ui->actionDNS)->setMinimumWidth(wid);
 }
 
 mainUI::~mainUI(){
@@ -50,7 +58,7 @@ void mainUI::newInputs(QStringList args){
 // === PRIVATE ===
 //Initial page loading (on page change)
 void mainUI::updateConnections(){
-  qDebug() << "Update Connections";
+  //qDebug() << "Update Connections";
   QStringList devs = NETWORK->list_devices();
   static QStringList lastdevs;
   if(devs == lastdevs){ return; } //no change
