@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>676</width>
-    <height>404</height>
+    <width>706</width>
+    <height>407</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -54,6 +54,30 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
+               <widget class="QToolButton" name="tool_conn_status_refresh">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Refresh</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="download">
+                  <normaloff/>
+                 </iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QComboBox" name="combo_conn_devices">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -68,6 +92,19 @@
                  <number>6</number>
                 </property>
                </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>5</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
               <item>
                <widget class="QToolButton" name="tool_dev_start">
@@ -150,43 +187,6 @@
                   <width>20</width>
                   <height>20</height>
                  </size>
-                </property>
-                <property name="toolButtonStyle">
-                 <enum>Qt::ToolButtonTextBesideIcon</enum>
-                </property>
-                <property name="autoRaise">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>5</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QToolButton" name="tool_conn_status_refresh">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Refresh Status</string>
-                </property>
-                <property name="icon">
-                 <iconset theme="download">
-                  <normaloff/>
-                 </iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -532,19 +532,188 @@
        </layout>
       </widget>
       <widget class="QWidget" name="page_dns">
-       <widget class="QLabel" name="label_5">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>90</y>
-          <width>181</width>
-          <height>51</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>DNS Page</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QTabWidget" name="tabWidget_dns">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab_dns_status">
+           <attribute name="icon">
+            <iconset theme="nmap">
+             <normaloff/>
+            </iconset>
+           </attribute>
+           <attribute name="title">
+            <string>Current Status</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QToolButton" name="tool_refresh_dns_status">
+                <property name="text">
+                 <string>Refresh Status</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="edit-refresh">
+                  <normaloff/>
+                 </iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="text_current_dns">
+              <property name="styleSheet">
+               <string notr="true">background: transparent;</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_dns_custom">
+           <attribute name="icon">
+            <iconset theme="configure">
+             <normaloff/>
+            </iconset>
+           </attribute>
+           <attribute name="title">
+            <string>Custom Entries</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <widget class="QToolButton" name="tool_dns_apply">
+                <property name="text">
+                 <string>Apply</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="dialog-apply">
+                  <normaloff/>
+                 </iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Custom DNS entries</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_dns_add">
+                <property name="text">
+                 <string>Add</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="list-add">
+                  <normaloff/>
+                 </iconset>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_dns_remove">
+                <property name="text">
+                 <string>Remove</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="list-remove">
+                  <normaloff/>
+                 </iconset>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_dns_up">
+                <property name="text">
+                 <string>Up</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="arrow-up">
+                  <normaloff/>
+                 </iconset>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_dns_down">
+                <property name="text">
+                 <string>Down</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="arrow-down">
+                  <normaloff/>
+                 </iconset>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QListWidget" name="list_dns_custom"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="font">
+               <font>
+                <italic>true</italic>
+               </font>
+              </property>
+              <property name="text">
+               <string>Note: Entries are ordered by priority (higher is earlier)</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="page_firewall">
        <widget class="QLabel" name="label_6">

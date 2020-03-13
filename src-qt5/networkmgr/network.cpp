@@ -289,6 +289,74 @@ bool Networking::connect_to_wifi_network(QString id, bool noretry){
   return ok;
 }
 
+
+// DNS specific functionality
+QString Networking::current_dns(){
+  return readFile("/etc/resolv.conf").join("\n");
+}
+
+QJsonObject Networking::custom_dns_settings(){
+  QJsonArray pre, post;
+  QStringList contents = readFile("/etc/resolvconf.conf");
+  for(int i=0; i<contents.length(); i++){
+    if(contents[i].startsWith("name_servers=")){
+      QString val = contents[i].section("=",1,-1);
+      if(val.contains("\"")){ val.remove("\""); }
+      QStringList tmp = val.split(" ", QString::SkipEmptyParts);
+      for(int j=0; j<tmp.length(); j++){ pre << tmp[j]; }
+    }else if(contents[i].startsWith("name_servers_append=")){
+      QString val = contents[i].section("=",1,-1);
+      if(val.contains("\"")){ val.remove("\""); }
+      QStringList tmp = val.split(" ", QString::SkipEmptyParts);
+      for(int j=0; j<tmp.length(); j++){ post << tmp[j]; }
+    }
+  }
+  QJsonObject out;
+  out.insert("before-auto", pre);
+  out.insert("after-auto", post);
+  return out;
+}
+
+inline QStringList jsonArrayToStringList(QJsonArray arr){
+  QStringList out;
+  for(int i=0; i<arr.count(); i++){ out << arr[i].toString(); }
+  out.removeDuplicates();
+  return out;
+}
+
+bool Networking::save_custom_dns_settings(QJsonObject obj){
+  QJsonArray pre = obj.value("before-auto").toArray();
+  QJsonArray post = obj.value("after-auto").toArray();
+  QStringList contents = readFile("/etc/resolvconf.conf");
+  bool changed = false;
+  for(int i=0; i<contents.length(); i++){
+    if(contents[i].startsWith("name_servers")){
+      changed = true;
+      contents.removeAt(i);
+      i--;
+    }
+  }
+  if(!pre.isEmpty()){
+    changed = true;
+    contents << "name_servers=\""+ jsonArrayToStringList(pre).join(" ")+"\"";
+  }
+  if(!post.isEmpty()){
+    changed = true;
+    contents << "name_servers_append=\""+ jsonArrayToStringList(post).join(" ")+"\"";
+  }
+  //qDebug() << "Save custom DNS settings:" << changed << contents;
+  if(!changed){ return true; } //nothing to do
+  bool ok = true;
+  static QString tmpfile = "/tmp/.resolvconf.conf";
+  if(ok){ ok = writeFile(tmpfile, contents); }
+  if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << tmpfile << "/etc/resolvconf.conf"); }
+  if(ok){ ok = CmdReturn("qsudo", QStringList() << "chown" << "root:root" << tmpfile); }
+  if(ok){ ok = CmdReturn("qsudo", QStringList() << "resolvconf" << "-u"); }
+  if(!QFile::exists(tmpfile)){ QFile::remove("tmpfile"); }
+  return ok;
+}
+
+
 //General Purpose functions
 QStringList Networking::readFile(QString path){
   QFile file(path);

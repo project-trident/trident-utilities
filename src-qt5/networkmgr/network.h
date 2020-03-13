@@ -42,6 +42,11 @@ public:
 	bool remove_wifi_network(QString id);
 	bool connect_to_wifi_network(QString id, bool noretry = false); //known network ID number
 
+	// DNS specific functionality
+	QString current_dns();
+	QJsonObject custom_dns_settings();
+	bool save_custom_dns_settings(QJsonObject);
+
 	//General Purpose functions
 	static QStringList readFile(QString path);
 	static bool writeFile(QString path, QStringList contents);
@@ -54,6 +59,7 @@ private:
 	QString CmdOutput(QString proc, QStringList args);
 	int CmdReturnCode(QString proc, QStringList args);
 	bool CmdReturn(QString proc, QStringList args);
+
 	void performWifiScan(); //designed to be run in a separate thread
 	void parseWifiScanResults(QStringList info);
 

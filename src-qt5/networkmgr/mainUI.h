@@ -64,6 +64,16 @@ private slots:
 	void on_combo_conn_static_profile_currentIndexChanged(int);
 	void on_line_static_v4_address_textEdited(const QString &text);
 	void on_line_static_v4_gateway_textEdited(const QString &text);
+
+	void rescan_current_dns();
+	void update_dns_settings();
+	void apply_dns_settings();
+	void on_tool_dns_add_clicked();
+	void on_tool_dns_down_clicked();
+	void on_tool_dns_remove_clicked();
+	void on_tool_dns_up_clicked();
+	void on_list_dns_custom_currentRowChanged(int);
+
 };
 
 #endif

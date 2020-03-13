@@ -35,6 +35,9 @@ mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
   ui->toolBar->widgetForAction(ui->actionFirewall)->setMinimumWidth(wid);
   ui->toolBar->widgetForAction(ui->actionVPN)->setMinimumWidth(wid);
   ui->toolBar->widgetForAction(ui->actionDNS)->setMinimumWidth(wid);
+  connect(ui->tool_dns_apply, SIGNAL(clicked()), this, SLOT(apply_dns_settings()) );
+  connect(ui->tool_refresh_dns_status, SIGNAL(clicked()), this, SLOT(rescan_current_dns()) );
+
 }
 
 mainUI::~mainUI(){
@@ -91,7 +94,9 @@ void mainUI::updateVPN(){
 
 }
 void mainUI::updateDNS(){
-
+  ui->tabWidget_dns->setCurrentIndex(0);
+  rescan_current_dns();
+  update_dns_settings();
 }
 
 // === PRIVATE SLOTS ===
@@ -418,4 +423,82 @@ void mainUI::on_line_static_v4_gateway_textEdited(const QString &text){
   QJsonObject info = ui->combo_conn_static_profile->currentData().toJsonObject();
     info.insert("routers", text);
   ui->combo_conn_static_profile->setItemData(index, info);
+}
+
+void mainUI::rescan_current_dns(){
+  ui->text_current_dns->setPlainText( NETWORK->current_dns() );
+}
+
+void mainUI::update_dns_settings(){
+  QJsonObject current = NETWORK->custom_dns_settings();
+  //qDebug() << "Custom DNS:" << current;
+  ui->list_dns_custom->clear();
+  QJsonArray tmp = current.value("before-auto").toArray();
+  for(int i=0; i<tmp.count(); i++){
+    ui->list_dns_custom->addItem(tmp[i].toString());
+  }
+  ui->list_dns_custom->addItem(QString("-- ")+tr("Automatic")+" --");
+  ui->list_dns_custom->item( ui->list_dns_custom->count()-1)->setWhatsThis("auto");
+  tmp = current.value("after-auto").toArray();
+  for(int i=0; i<tmp.count(); i++){
+    ui->list_dns_custom->addItem(tmp[i].toString());
+  }
+  on_list_dns_custom_currentRowChanged(0);
+}
+
+void mainUI::apply_dns_settings(){
+  QJsonArray pre, post;
+  bool pre_auto = true;
+  for(int i=0; i<ui->list_dns_custom->count(); i++){
+    QListWidgetItem *it = ui->list_dns_custom->item(i);
+    if(!it->whatsThis().isEmpty()){ pre_auto = false; }
+    else if(pre_auto){ pre << it->text(); }
+    else{ post << it->text(); }
+  }
+  QJsonObject obj;
+  obj.insert("before-auto", pre);
+  obj.insert("after-auto", post);
+  //qDebug() << "Apply DNS settings:" << obj;
+  bool ok = NETWORK->save_custom_dns_settings(obj);
+  if(!ok){
+    QMessageBox::warning(this, tr("Error"), tr("Could not save custom DNS entries"));
+  }else{
+    ui->tabWidget_dns->setCurrentIndex(0);
+    QTimer::singleShot(1000, this, SLOT(rescan_current_dns()) );
+  }
+}
+
+void mainUI::on_tool_dns_add_clicked(){
+  QString dns = QInputDialog::getText(this, tr("Add Custom DNS"), tr("DNS server address:"));
+  if(dns.isEmpty()){ return; }
+  ui->list_dns_custom->insertItem(0, dns);
+  ui->list_dns_custom->setCurrentRow(0); //keep the same item selected;
+}
+
+void mainUI::on_tool_dns_down_clicked(){
+  int row = ui->list_dns_custom->currentRow();
+  if(row>= (ui->list_dns_custom->count()-1)){ return; } //nothing to do
+  ui->list_dns_custom->insertItem(row+1, ui->list_dns_custom->takeItem(row));
+  ui->list_dns_custom->setCurrentRow(row+1); //keep the same item selected;
+}
+
+void mainUI::on_tool_dns_remove_clicked(){
+  int row = ui->list_dns_custom->currentRow();
+  if(row<0 || !ui->list_dns_custom->currentItem()->whatsThis().isEmpty()){ return; } //nothing to do
+  delete ui->list_dns_custom->takeItem(row);
+}
+
+void mainUI::on_tool_dns_up_clicked(){
+  int row = ui->list_dns_custom->currentRow();
+  if(row<=0){ return; } //nothing to do
+  ui->list_dns_custom->insertItem(row-1, ui->list_dns_custom->takeItem(row));
+  ui->list_dns_custom->setCurrentRow(row-1); //keep the same item selected;
+}
+
+void mainUI::on_list_dns_custom_currentRowChanged(int){
+  QListWidgetItem *it = ui->list_dns_custom->currentItem();
+  int crow = ui->list_dns_custom->currentRow();
+  ui->tool_dns_remove->setEnabled(it != 0 && it->whatsThis().isEmpty());
+  ui->tool_dns_up->setEnabled(it!=0 && crow>0);
+  ui->tool_dns_down->setEnabled(it!=0 && crow < (ui->list_dns_custom->count()-1) );
 }
