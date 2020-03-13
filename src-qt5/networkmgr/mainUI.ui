@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>706</width>
+    <width>784</width>
     <height>407</height>
    </rect>
   </property>
@@ -36,7 +36,7 @@
         <item row="0" column="0" colspan="2">
          <widget class="QTabWidget" name="tabs_conn">
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab_conn_status">
            <attribute name="icon">
@@ -345,7 +345,7 @@
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_8">
                    <property name="text">
-                    <string>Sentinal IP</string>
+                    <string>Sentinel IP</string>
                    </property>
                   </widget>
                  </item>
@@ -515,7 +515,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Static addresses are only used when the sentinal system IP is detected on the network. If no static address rules match the current network, then an automatic address will be applied instead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Static addresses are only used when the sentinel system IP is detected on the network. If no static address rules match the current network, then an automatic address will be applied instead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="wordWrap">
                   <bool>true</bool>
