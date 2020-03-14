@@ -36,7 +36,7 @@
         <item row="0" column="0" colspan="2">
          <widget class="QTabWidget" name="tabs_conn">
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_conn_status">
            <attribute name="icon">
@@ -65,7 +65,7 @@
                  <string>Refresh</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="download">
+                 <iconset theme="reload">
                   <normaloff/>
                  </iconset>
                 </property>
@@ -73,7 +73,7 @@
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
                 </property>
                 <property name="autoRaise">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -553,10 +553,10 @@
               <item>
                <widget class="QToolButton" name="tool_refresh_dns_status">
                 <property name="text">
-                 <string>Refresh Status</string>
+                 <string>Refresh</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="edit-refresh">
+                 <iconset theme="reload">
                   <normaloff/>
                  </iconset>
                 </property>
@@ -731,19 +731,182 @@
        </widget>
       </widget>
       <widget class="QWidget" name="page_vpn">
-       <widget class="QLabel" name="label_7">
-        <property name="geometry">
-         <rect>
-          <x>180</x>
-          <y>90</y>
-          <width>251</width>
-          <height>101</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>VPN Page</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <item>
+         <widget class="QTabWidget" name="tabWidget_vpn">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab_vpn_wireguard">
+           <attribute name="icon">
+            <iconset theme="wireguard"/>
+           </attribute>
+           <attribute name="title">
+            <string>Wireguard</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <widget class="QToolButton" name="tool_wg_refresh">
+                <property name="text">
+                 <string>Refresh</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="reload"/>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_wg_start">
+                <property name="toolTip">
+                 <string>Start Profile</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="system-run"/>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_wg_stop">
+                <property name="toolTip">
+                 <string>Stop Profile</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="system-cancel"/>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_wg_add">
+                <property name="toolTip">
+                 <string>Add Profile</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="list-add"/>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="tool_wg_remove">
+                <property name="toolTip">
+                 <string>Remove Profile</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="list-remove"/>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTreeWidget" name="treeWidget">
+              <property name="uniformRowHeights">
+               <bool>true</bool>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <property name="animated">
+               <bool>true</bool>
+              </property>
+              <attribute name="headerDefaultSectionSize">
+               <number>100</number>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>Status</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Profile</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_vpn_openvpn">
+           <attribute name="icon">
+            <iconset theme="network-vpn"/>
+           </attribute>
+           <attribute name="title">
+            <string>OpenVPN</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_10">
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="font">
+               <font>
+                <pointsize>13</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Coming soon!</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
