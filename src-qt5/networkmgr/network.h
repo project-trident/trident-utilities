@@ -47,6 +47,13 @@ public:
 	QJsonObject custom_dns_settings();
 	bool save_custom_dns_settings(QJsonObject);
 
+	// Wireguard specific functionality
+	QJsonObject current_wireguard_profiles();
+	bool add_wireguard_profile(QString path);
+	bool remove_wireguard_profile(QString name);
+	bool start_wireguard_profile(QString name);
+	bool stop_wireguard_profile(QString name);
+
 	//General Purpose functions
 	static QStringList readFile(QString path);
 	static bool writeFile(QString path, QStringList contents);

@@ -357,6 +357,48 @@ bool Networking::save_custom_dns_settings(QJsonObject obj){
 }
 
 
+// Wireguard specific functionality
+QJsonObject Networking::current_wireguard_profiles(){
+  QStringList netdevs = list_devices(); //current network devices
+  // (wireguard profiles show up in interface list here when running)
+  QJsonObject out;
+  QDir dir("/etc/wireguard");
+  QStringList files = dir.entryList( QStringList() << "*.conf", QDir::Files, QDir::Name);
+  for(int i=0; i<files.length(); i++){
+    QJsonObject tmp;
+    QString profile = files[i].section(".conf",0,-2).simplified();
+    tmp.insert("profile", profile);
+    tmp.insert("path", dir.absoluteFilePath(files[i]));
+    tmp.insert("is_running", netdevs.contains(profile));
+    out.insert(profile, tmp);
+  }
+  return out;
+}
+
+bool Networking::add_wireguard_profile(QString path){
+  QString newpath = "/etc/wireguard/"+ path.section("/",-1);
+  bool ok = CmdReturn("qsudo", QStringList() << "mv" << path << newpath);
+  if(ok){
+    CmdReturn("qsudo", QStringList() << "chown" << "root:root" << newpath);
+    CmdReturn("qsudo", QStringList() << "chmod" << "700" << newpath);
+  }
+  return ok;
+}
+
+bool Networking::remove_wireguard_profile(QString name){
+  return CmdReturn("qsudo", QStringList() << "rm" << "/etc/wireguard/"+name+".conf");
+}
+
+bool Networking::start_wireguard_profile(QString name){
+  //qDebug() << "Start WG:" << name;
+  return CmdReturn("qsudo", QStringList() << "wg-quick" << "up" << name);
+}
+
+bool Networking::stop_wireguard_profile(QString name){
+  //qDebug() << "Stop WG:" << name;
+  return CmdReturn("qsudo", QStringList() << "wg-quick" << "down" << name);
+}
+
 //General Purpose functions
 QStringList Networking::readFile(QString path){
   QFile file(path);
@@ -402,6 +444,7 @@ bool Networking::sameNetwork(QJsonObject A, QJsonObject B){
 //  === PRIVATE ===
 QString Networking::CmdOutput(QString proc, QStringList args){
   QProcess P;
+    P.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
     P.start(proc, args);
     P.waitForFinished();
   return P.readAll();
@@ -409,6 +452,7 @@ QString Networking::CmdOutput(QString proc, QStringList args){
 
 int Networking::CmdReturnCode(QString proc, QStringList args){
   QProcess P;
+    P.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
     P.start(proc, args);
     P.waitForFinished();
   return P.exitCode();

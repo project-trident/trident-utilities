@@ -18,12 +18,20 @@
   </property>
   <property name="windowIcon">
    <iconset theme="preferences-system-network">
-    <normaloff/>
-   </iconset>
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
     <item>
@@ -41,14 +49,22 @@
           <widget class="QWidget" name="tab_conn_status">
            <attribute name="icon">
             <iconset theme="dialog-information">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Devices</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_4">
-            <property name="margin">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
              <number>2</number>
             </property>
             <item>
@@ -66,8 +82,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="reload">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -119,8 +134,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="system-run">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -149,8 +163,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="system-cancel">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -179,8 +192,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="reload">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -216,8 +228,7 @@
           <widget class="QWidget" name="tab_conn_wifi">
            <attribute name="icon">
             <iconset theme="network-wireless">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Wifi Networks</string>
@@ -238,8 +249,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="network-wireless">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -266,8 +276,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="cancel">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -287,8 +296,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="network-wired">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -321,8 +329,7 @@
           <widget class="QWidget" name="tab_conn_config">
            <attribute name="icon">
             <iconset theme="configure">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Static Addresses</string>
@@ -371,8 +378,7 @@
                      </property>
                      <property name="icon">
                       <iconset theme="edit-delete">
-                       <normaloff/>
-                      </iconset>
+                       <normaloff>.</normaloff>.</iconset>
                      </property>
                      <property name="autoRaise">
                       <bool>true</bool>
@@ -395,8 +401,7 @@
                      </property>
                      <property name="icon">
                       <iconset theme="document-new">
-                       <normaloff/>
-                      </iconset>
+                       <normaloff>.</normaloff>.</iconset>
                      </property>
                      <property name="autoRaise">
                       <bool>true</bool>
@@ -436,7 +441,7 @@
                    <property name="placeholderText">
                     <string>123.456.0.1</string>
                    </property>
-                   <property name="clearButtonEnabled" stdset="0">
+                   <property name="clearButtonEnabled">
                     <bool>false</bool>
                    </property>
                   </widget>
@@ -479,8 +484,7 @@
                      </property>
                      <property name="icon">
                       <iconset theme="completed">
-                       <normaloff/>
-                      </iconset>
+                       <normaloff>.</normaloff>.</iconset>
                      </property>
                      <property name="toolButtonStyle">
                       <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -541,8 +545,7 @@
           <widget class="QWidget" name="tab_dns_status">
            <attribute name="icon">
             <iconset theme="nmap">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Current Status</string>
@@ -557,8 +560,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="reload">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -598,8 +600,7 @@
           <widget class="QWidget" name="tab_dns_custom">
            <attribute name="icon">
             <iconset theme="configure">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Custom Entries</string>
@@ -614,8 +615,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="dialog-apply">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -636,8 +636,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="list-add">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -651,8 +650,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="list-remove">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -666,8 +664,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="arrow-up">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -681,8 +678,7 @@
                 </property>
                 <property name="icon">
                  <iconset theme="arrow-down">
-                  <normaloff/>
-                 </iconset>
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -739,7 +735,8 @@
           </property>
           <widget class="QWidget" name="tab_vpn_wireguard">
            <attribute name="icon">
-            <iconset theme="wireguard"/>
+            <iconset theme="wireguard">
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>Wireguard</string>
@@ -753,7 +750,8 @@
                  <string>Refresh</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="reload"/>
+                 <iconset theme="reload">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="toolButtonStyle">
                  <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -782,7 +780,8 @@
                  <string>...</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="system-run"/>
+                 <iconset theme="system-run">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -798,7 +797,8 @@
                  <string>...</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="system-cancel"/>
+                 <iconset theme="system-cancel">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -827,7 +827,8 @@
                  <string>...</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="list-add"/>
+                 <iconset theme="list-add">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -843,7 +844,8 @@
                  <string>...</string>
                 </property>
                 <property name="icon">
-                 <iconset theme="list-remove"/>
+                 <iconset theme="list-remove">
+                  <normaloff>.</normaloff>.</iconset>
                 </property>
                 <property name="autoRaise">
                  <bool>true</bool>
@@ -853,7 +855,10 @@
              </layout>
             </item>
             <item>
-             <widget class="QTreeWidget" name="treeWidget">
+             <widget class="QTreeWidget" name="tree_wireguard">
+              <property name="indentation">
+               <number>5</number>
+              </property>
               <property name="uniformRowHeights">
                <bool>true</bool>
               </property>
@@ -864,7 +869,7 @@
                <bool>true</bool>
               </property>
               <attribute name="headerDefaultSectionSize">
-               <number>100</number>
+               <number>150</number>
               </attribute>
               <column>
                <property name="text">
@@ -882,7 +887,8 @@
           </widget>
           <widget class="QWidget" name="tab_vpn_openvpn">
            <attribute name="icon">
-            <iconset theme="network-vpn"/>
+            <iconset theme="network-vpn">
+             <normaloff>.</normaloff>.</iconset>
            </attribute>
            <attribute name="title">
             <string>OpenVPN</string>
@@ -958,8 +964,7 @@
    </property>
    <property name="icon">
     <iconset theme="network-wired">
-     <normaloff/>
-    </iconset>
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Connections</string>
@@ -974,8 +979,7 @@
    </property>
    <property name="icon">
     <iconset theme="preferences-system-firewall">
-     <normaloff/>
-    </iconset>
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Firewall</string>
@@ -990,8 +994,7 @@
    </property>
    <property name="icon">
     <iconset theme="network-vpn">
-     <normaloff/>
-    </iconset>
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>VPN</string>
@@ -1006,8 +1009,7 @@
    </property>
    <property name="icon">
     <iconset theme="nmap">
-     <normaloff/>
-    </iconset>
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>DNS</string>

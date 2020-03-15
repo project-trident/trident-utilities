@@ -74,6 +74,13 @@ private slots:
 	void on_tool_dns_up_clicked();
 	void on_list_dns_custom_currentRowChanged(int);
 
+	void refresh_current_wireguard();
+	void on_tool_wg_add_clicked();
+	void on_tool_wg_remove_clicked();
+	void on_tool_wg_start_clicked();
+	void on_tool_wg_stop_clicked();
+	void on_tree_wireguard_itemSelectionChanged();
+
 };
 
 #endif

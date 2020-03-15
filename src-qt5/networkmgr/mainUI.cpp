@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QFileDialog>
 
 // === PUBLIC ===
 mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
@@ -37,7 +38,7 @@ mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
   ui->toolBar->widgetForAction(ui->actionDNS)->setMinimumWidth(wid);
   connect(ui->tool_dns_apply, SIGNAL(clicked()), this, SLOT(apply_dns_settings()) );
   connect(ui->tool_refresh_dns_status, SIGNAL(clicked()), this, SLOT(rescan_current_dns()) );
-
+  connect(ui->tool_wg_refresh, SIGNAL(clicked()), this, SLOT(refresh_current_wireguard()) );
 }
 
 mainUI::~mainUI(){
@@ -90,9 +91,12 @@ void mainUI::updateConnections(){
 void mainUI::updateFirewall(){
 
 }
+
 void mainUI::updateVPN(){
+  refresh_current_wireguard();
 
 }
+
 void mainUI::updateDNS(){
   ui->tabWidget_dns->setCurrentIndex(0);
   rescan_current_dns();
@@ -501,4 +505,104 @@ void mainUI::on_list_dns_custom_currentRowChanged(int){
   ui->tool_dns_remove->setEnabled(it != 0 && it->whatsThis().isEmpty());
   ui->tool_dns_up->setEnabled(it!=0 && crow>0);
   ui->tool_dns_down->setEnabled(it!=0 && crow < (ui->list_dns_custom->count()-1) );
+}
+
+void mainUI::refresh_current_wireguard(){
+  static QJsonObject prev_info;
+  QJsonObject tmp = NETWORK->current_wireguard_profiles();
+  QStringList keys = tmp.keys();
+  if(tmp != prev_info){
+    QString curitem;
+    if(ui->tree_wireguard->currentItem()!=0){
+      curitem = ui->tree_wireguard->currentItem()->text(1);
+    }
+    ui->tree_wireguard->clear();
+    for(int i=0; i<keys.length(); i++){
+      QJsonObject obj = tmp.value(keys[i]).toObject();
+      bool running = obj.value("is_running").toBool();
+      QTreeWidgetItem *it = new QTreeWidgetItem();
+        it->setText(0, running ? tr("Active") : tr("Disabled"));
+        it->setIcon(0, QIcon::fromTheme(running ? "system-run" : "cancel"));
+        it->setText(1, keys[i]);
+        it->setData(0, Qt::UserRole, obj);
+      ui->tree_wireguard->addTopLevelItem(it);
+      if(keys[i] == curitem){
+        ui->tree_wireguard->setCurrentItem(it);
+      }
+    }
+    if(prev_info.isEmpty()){ ui->tree_wireguard->sortItems(1, Qt::AscendingOrder); }
+    prev_info = tmp;
+    ui->tree_wireguard->resizeColumnToContents(0);
+  }else{
+    //no new info - see if we are waiting for a status change
+    for(int i=0; i<ui->tree_wireguard->topLevelItemCount(); i++){
+      if( !ui->tree_wireguard->topLevelItem(i)->data(1, Qt::UserRole).toString().isEmpty()){
+         QTimer::singleShot(500, this, SLOT(refresh_current_wireguard()));
+        break;
+      }
+    }
+  }
+  on_tree_wireguard_itemSelectionChanged();
+}
+
+void mainUI::on_tool_wg_add_clicked(){
+  QStringList list = QFileDialog::getOpenFileNames(this, tr("Import WireGuard Configurations"), QDir::homePath(), "Configuration files (*.conf)");
+  for(int i=0; i<list.length(); i++){
+    bool ok = NETWORK->add_wireguard_profile(list[i]);
+    if(!ok){
+      QMessageBox::warning(this, tr("Error"), tr("Could not import Wireguard configuration file:")+"/n"+list[i].section("/",-1) );
+    }
+  }
+  QTimer::singleShot(500, this, SLOT(refresh_current_wireguard()));
+}
+
+void mainUI::on_tool_wg_remove_clicked(){
+  QTreeWidgetItem *it = ui->tree_wireguard->currentItem();
+  if(it==0){ return; }
+  QJsonObject info = it->data(0, Qt::UserRole).toJsonObject();
+  NETWORK->remove_wireguard_profile(info.value("profile").toString());
+  QTimer::singleShot(500, this, SLOT(refresh_current_wireguard()));
+}
+
+void mainUI::on_tool_wg_start_clicked(){
+  QTreeWidgetItem *it = ui->tree_wireguard->currentItem();
+  if(it==0){ return; }
+  QJsonObject info = it->data(0, Qt::UserRole).toJsonObject();
+  bool ok = NETWORK->start_wireguard_profile(info.value("profile").toString());
+  //qDebug() << "Started WG profile" << ok;
+  if(ok){
+    it->setText(0, tr("Starting"));
+    it->setData(1, Qt::UserRole, "pending");
+    ui->tree_wireguard->resizeColumnToContents(0);
+  }
+  on_tree_wireguard_itemSelectionChanged();
+  QTimer::singleShot(100, this, SLOT(refresh_current_wireguard()));
+}
+
+void mainUI::on_tool_wg_stop_clicked(){
+  QTreeWidgetItem *it = ui->tree_wireguard->currentItem();
+  if(it==0){ return; }
+  QJsonObject info = it->data(0, Qt::UserRole).toJsonObject();
+  bool ok = NETWORK->stop_wireguard_profile(info.value("profile").toString());
+  if(ok){
+    it->setText(0, tr("Stopping"));
+    it->setData(1, Qt::UserRole, "pending");
+    ui->tree_wireguard->resizeColumnToContents(0);
+  }
+  //qDebug() << "Stopped WG profile" << ok;
+  on_tree_wireguard_itemSelectionChanged();
+  QTimer::singleShot(100, this, SLOT(refresh_current_wireguard()));
+}
+
+void mainUI::on_tree_wireguard_itemSelectionChanged(){
+  QTreeWidgetItem *it = ui->tree_wireguard->currentItem();
+  bool running = false;
+  bool pending = false;
+  if(it!=0){
+    running = it->data(0, Qt::UserRole).toJsonObject().value("is_running").toBool(false);
+    pending = !it->data(1, Qt::UserRole).toString().isEmpty();;
+  }
+  ui->tool_wg_remove->setEnabled(it!=0 && !running && !pending);
+  ui->tool_wg_start->setEnabled(it!=0 && !running && !pending);
+  ui->tool_wg_stop->setEnabled(it!=0 && running && !pending);
 }
