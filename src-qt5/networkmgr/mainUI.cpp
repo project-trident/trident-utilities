@@ -16,6 +16,7 @@ mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
   connect(NETWORK, SIGNAL(new_wifi_scan_results()), this, SLOT(updateWifiConnections()) );
   connect(ui->tool_wifi_refresh, SIGNAL(clicked()), NETWORK, SLOT(startWifiScan()) );
 
+  ui->actionConnections->setEnabled( QFile::exists("/var/service/dhcpcd") );
   page_group = new QActionGroup(this);
     page_group->setExclusive(true);
     page_group->addAction(ui->actionConnections);
@@ -80,7 +81,7 @@ void mainUI::updateConnections(){
     if(cdev == devs[i]){ index = i; }
     else if(cdev.isEmpty() && is_wifi){ index = i; }
   }
-  ui->tab_conn_wifi->setEnabled(haswifi);
+  ui->tab_conn_wifi->setEnabled(haswifi && QFile::exists("/var/service/wpa_supplicant"));
   if(index>=0){ ui->combo_conn_devices->setCurrentIndex(index); }
   if(cdev.isEmpty() && haswifi){
     //First time loading the device list - go ahead and start a wifi scan in the background
@@ -94,7 +95,7 @@ void mainUI::updateFirewall(){
 
 void mainUI::updateVPN(){
   refresh_current_wireguard();
-
+  ui->tab_vpn_wireguard->setEnabled( QFile::exists("/usr/bin/wg-quick") );
 }
 
 void mainUI::updateDNS(){
