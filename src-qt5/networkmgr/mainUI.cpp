@@ -90,7 +90,7 @@ void mainUI::updateConnections(){
 }
 
 void mainUI::updateFirewall(){
-
+  refresh_current_firewall();
 }
 
 void mainUI::updateVPN(){
@@ -606,4 +606,82 @@ void mainUI::on_tree_wireguard_itemSelectionChanged(){
   ui->tool_wg_remove->setEnabled(it!=0 && !running && !pending);
   ui->tool_wg_start->setEnabled(it!=0 && !running && !pending);
   ui->tool_wg_stop->setEnabled(it!=0 && running && !pending);
+}
+
+// Firewall Page
+void mainUI::refresh_current_firewall(){
+  bool running = NETWORK->firewall_is_running();
+  ui->tool_fw_start->setVisible(!running);
+  ui->tool_fw_stop->setVisible(running);
+  if(ui->label_fw_status->whatsThis().isEmpty()){
+    ui->label_fw_status->setWhatsThis( ui->label_fw_status->text() );
+  }
+  ui->label_fw_status->setText( ui->label_fw_status->whatsThis().arg(running ? tr("Active") : tr("Disabled")) );
+  // Now update the profile files and custom rules
+  QJsonObject current = NETWORK->current_firewall_files();
+  qDebug() << "Current state:" << current;
+  QString cprofile = current.value("running_profile").toString();
+  QStringList profiles = current.value("profiles").toObject().keys();
+  ui->combo_fw_profile->clear();
+  for(int i=0; i<profiles.length(); i++){
+    ui->combo_fw_profile->addItem(profiles[i], current.value("profiles").toObject().value(profiles[i]).toString());
+    if(profiles[i] == cprofile){
+      ui->combo_fw_profile->setCurrentIndex(ui->combo_fw_profile->count()-1);
+    }
+  }
+  if(cprofile=="NONE"){
+    ui->combo_fw_profile->addItem(cprofile, "/etc/nftables.conf"); //manual file?
+    ui->combo_fw_profile->setCurrentIndex(ui->combo_fw_profile->count()-1);
+  }
+  QString crule = ui->combo_fw_rules->currentText();
+  QStringList rules = current.value("rules").toObject().keys();
+  ui->combo_fw_rules->clear();
+  for(int i=0; i<rules.length(); i++){
+    ui->combo_fw_rules->addItem(rules[i], current.value("rules").toObject().value(rules[i]).toString());
+    if(crule == rules[i]){ ui->combo_fw_rules->setCurrentIndex(ui->combo_fw_rules->count()-1); }
+  }
+}
+
+void mainUI::on_tool_fw_start_clicked(){
+  if( NETWORK->start_firewall() ){
+    QTimer::singleShot(50, this, SLOT(refresh_current_firewall()) );
+  }else{
+    //Firewall could not be started
+    QMessageBox::warning(this, tr("Error"), tr("Could not start firewall!"));
+  }
+}
+
+void mainUI::on_tool_fw_stop_clicked(){
+  if( NETWORK->stop_firewall() ){
+    QTimer::singleShot(50, this, SLOT(refresh_current_firewall()) );
+  }else{
+    //Firewall could not be started
+    QMessageBox::warning(this, tr("Error"), tr("Could not stop firewall!"));
+  }
+}
+
+void mainUI::on_combo_fw_profile_currentIndexChanged(int){
+  QString profile = ui->combo_fw_profile->currentText();
+  ui->group_fw_rules->setEnabled(profile!="NONE");
+}
+
+void mainUI::on_combo_fw_rules_currentIndexChanged(int){
+  QString path = ui->combo_fw_rules->currentData().toString();
+  ui->text_fw_rule->setText( Networking::readFile(path).join("\n") );
+}
+
+void mainUI::on_tool_fw_addrule_clicked(){
+
+}
+
+void mainUI::on_tool_fw_applyrule_clicked(){
+
+}
+
+void mainUI::on_tool_fw_rmrule_clicked(){
+
+}
+
+void mainUI::on_tool_fw_shortcuts_clicked(){
+
 }

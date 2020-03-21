@@ -54,6 +54,12 @@ public:
 	bool start_wireguard_profile(QString name);
 	bool stop_wireguard_profile(QString name);
 
+	// Firewall functionality
+	bool firewall_is_running();
+	bool start_firewall();
+	bool stop_firewall();
+	QJsonObject current_firewall_files();
+
 	//General Purpose functions
 	static QStringList readFile(QString path);
 	static bool writeFile(QString path, QStringList contents);

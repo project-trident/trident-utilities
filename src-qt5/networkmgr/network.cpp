@@ -399,6 +399,47 @@ bool Networking::stop_wireguard_profile(QString name){
   return CmdReturn("qsudo", QStringList() << "wg-quick" << "down" << name);
 }
 
+// Firewall functionality
+bool Networking::firewall_is_running(){
+  return CmdReturn("pgrep", QStringList() << "-fx" << "nftables");
+}
+
+bool Networking::start_firewall(){
+return CmdReturn("qsudo", QStringList() << "sv" << "start" << "nftables");
+}
+
+bool Networking::stop_firewall(){
+return CmdReturn("qsudo", QStringList() << "sv" << "stop" << "nftables");
+}
+
+QJsonObject Networking::current_firewall_files(){
+  QJsonObject out;
+  //First figure out what profile is currently running
+  QFileInfo finfo("/etc/nftables.conf");
+  if(finfo.isSymLink()){
+    QString file = finfo.symLinkTarget();
+    out.insert("running_profile", file.section("/",-1).section(".",0,-2) );
+    out.insert("running_profile_file", file);
+  }else{
+    out.insert("running_profile", "NONE");
+  }
+  //Now read through the available profile/custom files
+  QDir dir("/etc/firewall-conf");
+  QStringList files = dir.entryList(QStringList() << "*.conf", QDir::Files, QDir::Name);
+  QJsonObject profiles, custom;
+  for(int i=0; i<files.length(); i++){
+    QString abspath = dir.absoluteFilePath(files[i]);
+    if(files[i].startsWith("custom-")){
+      profiles.insert(files[i].section("-",1,-1).section(".",0,-2), abspath);
+    }else{
+      profiles.insert(files[i].section(".",0,-2), abspath);
+    }
+  }
+  out.insert("profiles", profiles);
+  out.insert("custom", custom);
+  return out;
+}
+
 //General Purpose functions
 QStringList Networking::readFile(QString path){
   QFile file(path);

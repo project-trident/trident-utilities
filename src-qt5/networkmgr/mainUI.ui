@@ -37,7 +37,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="page_connections">
        <layout class="QGridLayout" name="gridLayout">
@@ -738,7 +738,8 @@
              <string>Start</string>
             </property>
             <property name="icon">
-             <iconset theme="security-high"/>
+             <iconset theme="security-high">
+              <normaloff>.</normaloff>.</iconset>
             </property>
             <property name="toolButtonStyle">
              <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -761,7 +762,8 @@
              <string>Stop</string>
             </property>
             <property name="icon">
-             <iconset theme="security-low"/>
+             <iconset theme="security-low">
+              <normaloff>.</normaloff>.</iconset>
             </property>
             <property name="toolButtonStyle">
              <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -780,7 +782,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="combo_fw_profile"/>
+           <widget class="QComboBox" name="combo_fw_profile">
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer_7">
@@ -798,7 +804,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox">
+         <widget class="QGroupBox" name="group_fw_rules">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -812,7 +818,11 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_9">
              <item>
-              <widget class="QComboBox" name="combo_fw_rules"/>
+              <widget class="QComboBox" name="combo_fw_rules">
+               <property name="sizeAdjustPolicy">
+                <enum>QComboBox::AdjustToContents</enum>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="tool_fw_addrule">
@@ -820,7 +830,8 @@
                 <string>Add</string>
                </property>
                <property name="icon">
-                <iconset theme="list-add"/>
+                <iconset theme="list-add">
+                 <normaloff>.</normaloff>.</iconset>
                </property>
                <property name="autoRaise">
                 <bool>true</bool>
@@ -833,7 +844,8 @@
                 <string>Remove</string>
                </property>
                <property name="icon">
-                <iconset theme="list-remove"/>
+                <iconset theme="list-remove">
+                 <normaloff>.</normaloff>.</iconset>
                </property>
                <property name="autoRaise">
                 <bool>true</bool>
@@ -859,7 +871,8 @@
                 <string>Apply</string>
                </property>
                <property name="icon">
-                <iconset theme="dialog-apply"/>
+                <iconset theme="dialog-apply">
+                 <normaloff>.</normaloff>.</iconset>
                </property>
                <property name="toolButtonStyle">
                 <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -875,7 +888,8 @@
                 <string>Shortcuts</string>
                </property>
                <property name="icon">
-                <iconset theme="open-menu"/>
+                <iconset theme="open-menu">
+                 <normaloff>.</normaloff>.</iconset>
                </property>
                <property name="popupMode">
                 <enum>QToolButton::InstantPopup</enum>
@@ -1150,7 +1164,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset theme="preferences-web-browser-adblock"/>
+    <iconset theme="preferences-web-browser-adblock">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Firewall</string>
@@ -1164,7 +1179,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset theme="preferences-web-browser-ssl"/>
+    <iconset theme="preferences-web-browser-ssl">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>VPN</string>
