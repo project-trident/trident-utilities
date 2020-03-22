@@ -440,6 +440,37 @@ QJsonObject Networking::current_firewall_files(){
   return out;
 }
 
+bool Networking::change_firewall_profile(QString path){
+  bool ok = CmdReturn("qsudo", QStringList() << "ln" << "-sf" << path << "/etc/nftables.conf");
+  if(ok){
+    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables");
+  }
+  return ok;
+}
+
+bool Networking::save_firewall_rules(QString path, QStringList contents){
+  QString tmppath = "/tmp/."+path.section("/",-1);
+  bool ok = writeFile(tmppath, contents);
+  if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << tmppath << path); }
+  if(ok){
+    CmdReturn("qsudo", QStringList() << "chown" << "root:root" << path);
+    CmdReturn("qsudo", QStringList() << "chmod" << "744" << path);
+    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables");
+  }
+  return ok;
+}
+
+bool Networking::remove_firewall_rules(QString path){
+  if(!QFile::exists(path)){ return true; } //does not exist in the first place
+  if(!QFileInfo(path).canonicalPath().startsWith("/etc/firewall-conf/")){ return false; }
+  bool ok = CmdReturn("qsudo", QStringList() << "rm" << "-f" << path);
+  if(ok){
+    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables");
+  }
+  return ok;
+}
+
+
 //General Purpose functions
 QStringList Networking::readFile(QString path){
   QFile file(path);

@@ -59,6 +59,9 @@ public:
 	bool start_firewall();
 	bool stop_firewall();
 	QJsonObject current_firewall_files();
+	bool change_firewall_profile(QString path);
+	bool save_firewall_rules(QString path, QStringList contents);
+	bool remove_firewall_rules(QString path);
 
 	//General Purpose functions
 	static QStringList readFile(QString path);

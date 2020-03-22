@@ -621,6 +621,7 @@ void mainUI::refresh_current_firewall(){
   QJsonObject current = NETWORK->current_firewall_files();
   qDebug() << "Current state:" << current;
   QString cprofile = current.value("running_profile").toString();
+  ui->combo_fw_profile->setWhatsThis(cprofile); //tag the current profile in the backend
   QStringList profiles = current.value("profiles").toObject().keys();
   ui->combo_fw_profile->clear();
   for(int i=0; i<profiles.length(); i++){
@@ -662,6 +663,14 @@ void mainUI::on_tool_fw_stop_clicked(){
 
 void mainUI::on_combo_fw_profile_currentIndexChanged(int){
   QString profile = ui->combo_fw_profile->currentText();
+  QString oldprofile = ui->combo_fw_profile->whatsThis();
+  if(!oldprofile.isEmpty() && !profile.isEmpty() && profile != oldprofile){
+    //Profile changed - save the change in the backend
+    bool ok = NETWORK->change_firewall_profile(ui->combo_fw_profile->currentData().toString());
+    QTimer::singleShot(50, this, SLOT(refresh_current_firewall()));
+    return;
+  }
+  if(!profile.isEmpty()){ ui->combo_fw_profile->setWhatsThis(profile); }//currently-used profile name
   ui->group_fw_rules->setEnabled(profile!="NONE");
 }
 
@@ -671,15 +680,29 @@ void mainUI::on_combo_fw_rules_currentIndexChanged(int){
 }
 
 void mainUI::on_tool_fw_addrule_clicked(){
+  //Prompt for the new rule name
+
+  //Add the rule into the list and pre-select it
 
 }
 
 void mainUI::on_tool_fw_applyrule_clicked(){
-
+  QString path = ui->combo_fw_rules->currentData().toString();
+  if(path.isEmpty()){ return; }
+  QStringList contents = ui->text_fw_rule->toPlainText().split("\n");
+  if( !NETWORK->save_firewall_rules(path, contents) ){
+   QMessageBox::warning(this, tr("Error"), tr("Could not update firewall rules:")+"\n\n"+ui->combo_fw_rules->currentText());
+  }
+  QTimer::singleShot(50, this, SLOT(refresh_current_firewall()));
 }
 
 void mainUI::on_tool_fw_rmrule_clicked(){
-
+  QString path = ui->combo_fw_rules->currentData().toString();
+  if(path.isEmpty()){ return; }
+  if( !NETWORK->remove_firewall_rules(path) ){
+   QMessageBox::warning(this, tr("Error"), tr("Could not remove firewall rules:")+"\n\n"+ui->combo_fw_rules->currentText());
+  }
+  QTimer::singleShot(50, this, SLOT(refresh_current_firewall()));
 }
 
 void mainUI::on_tool_fw_shortcuts_clicked(){
