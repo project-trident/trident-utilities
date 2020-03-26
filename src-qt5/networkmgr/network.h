@@ -76,7 +76,7 @@ private:
 	int CmdReturnCode(QString proc, QStringList args);
 	bool CmdReturn(QString proc, QStringList args);
 
-	void performWifiScan(); //designed to be run in a separate thread
+	void performWifiScan(QStringList wifi_devices); //designed to be run in a separate thread
 	void parseWifiScanResults(QStringList info);
 
 public slots:

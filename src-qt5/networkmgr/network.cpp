@@ -6,6 +6,7 @@
 static QRegExp ip4regex = QRegExp("([0-9]{1,3}\\.){3}[0-9]{1,3}");
 static QRegExp bssidRegex = QRegExp("([^:]{2}:){5}[^:]{2}");
 static QString DHCPConf = "/etc/dhcpcd.conf";
+QStringList wifidevs;
 
 Networking::Networking(QObject *parent) : QObject(parent){
   NETMAN = new QNetworkConfigurationManager(this);
@@ -19,10 +20,15 @@ QStringList Networking::list_devices(){
   QList<QNetworkConfiguration> configs = NETMAN->allConfigurations();
   //qDebug() << "isOnline:" << NETMAN->isOnline();
   QStringList devs;
+  QStringList newwifidevs;
   for(int i=0; i<configs.length(); i++){
     //qDebug() << "config:" << configs[i].identifier() << configs[i].bearerTypeName() << configs[i].name() << configs[i].state();
     devs << configs[i].name();
+    if(configs[i].name().startsWith("wl")){
+      newwifidevs << configs[i].name(); //save this for scanning later
+    }
   }
+  wifidevs = newwifidevs; //save this list for later
   return devs;
 }
 
@@ -364,6 +370,11 @@ QJsonObject Networking::current_wireguard_profiles(){
   QJsonObject out;
   QDir dir("/etc/wireguard");
   QStringList files = dir.entryList( QStringList() << "*.conf", QDir::Files, QDir::Name);
+  if(files.isEmpty() && !dir.isReadable()){
+    //The dir is probaby not readable right now - make it so (files inside are still unreadable/secure)
+    bool ok = CmdReturn("qsudo", QStringList() << "chmod" << "755" << "/etc/wireguard");
+    if(ok){ files = dir.entryList( QStringList() << "*.conf", QDir::Files, QDir::Name); } //try again
+  }
   for(int i=0; i<files.length(); i++){
     QJsonObject tmp;
     QString profile = files[i].section(".conf",0,-2).simplified();
@@ -376,8 +387,15 @@ QJsonObject Networking::current_wireguard_profiles(){
 }
 
 bool Networking::add_wireguard_profile(QString path){
+  //Make sure the directory exists and create it otherwise
+  bool ok = true;
+  if(!QFile::exists("/etc/wireguard")){
+    ok = CmdReturn("qsudo", QStringList() << "mkdir" << "-p" << "/etc/wireguard");
+    if(ok){ CmdReturn("qsudo", QStringList() << "chmod" << "755" << "/etc/wireguard"); }
+  }
+  if(!ok){ return false; }
   QString newpath = "/etc/wireguard/"+ path.section("/",-1);
-  bool ok = CmdReturn("qsudo", QStringList() << "mv" << path << newpath);
+  ok = CmdReturn("qsudo", QStringList() << "mv" << path << newpath);
   if(ok){
     CmdReturn("qsudo", QStringList() << "chown" << "root:root" << newpath);
     CmdReturn("qsudo", QStringList() << "chmod" << "700" << newpath);
@@ -535,9 +553,10 @@ bool Networking::CmdReturn(QString proc, QStringList args){
   return (retcode == 0);
 }
 
-void Networking::performWifiScan(){
+void Networking::performWifiScan(QStringList wifi_devices){
+  if(wifi_devices.isEmpty()){ return; }
   this->emit starting_wifi_scan();
-  CmdOutput("wpa_cli", QStringList() << "scan");
+  CmdOutput("wpa_cli", QStringList() << "-i" << wifi_devices[0] << "scan" );
   for(int i=0; i<10; i++){
     QThread::sleep(1);
     QStringList lines = CmdOutput("wpa_cli", QStringList() << "scan_results" ).split("\n");
@@ -619,5 +638,7 @@ bool Networking::setDeviceState(QString device, State stat){
 }
 
 void Networking::startWifiScan(){
-  QtConcurrent::run(this, &Networking::performWifiScan);
+  //Grab the first wifi device and use that for the scan
+  if(wifidevs.isEmpty()){ return; }
+  QtConcurrent::run(this, &Networking::performWifiScan, wifidevs);
 }

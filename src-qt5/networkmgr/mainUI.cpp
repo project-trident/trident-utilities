@@ -666,7 +666,7 @@ void mainUI::on_combo_fw_profile_currentIndexChanged(int){
   QString oldprofile = ui->combo_fw_profile->whatsThis();
   if(!oldprofile.isEmpty() && !profile.isEmpty() && profile != oldprofile){
     //Profile changed - save the change in the backend
-    bool ok = NETWORK->change_firewall_profile(ui->combo_fw_profile->currentData().toString());
+    NETWORK->change_firewall_profile(ui->combo_fw_profile->currentData().toString());
     QTimer::singleShot(50, this, SLOT(refresh_current_firewall()));
     return;
   }

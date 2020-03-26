@@ -9,21 +9,25 @@
 #------------------------
 #Inputs: 
 #   $1 : location of the new dhcpcd.conf file to use.
+#------------------------
 if [ ! -f "$1" ] || [ -z "$1" ] || [ $(id -u) -ne 0 ] ; then
   #File does not exist or not provided
   exit 1
 fi
 
-#Check the 
+#Save the old version for a moment
 mv -f "/etc/dhcpcd.conf" "/etc/dhcpcd.conf.prev"
 if [ $? -ne 0 ] ; then
   exit 1
 fi
+#Move over the new version
 mv -f "$1" "/etc/dhcpcd.conf"
 retcode=$?
 if [ ${retcode} -eq 0 ] ; then
+  #Setup permissions properly
   chown root:root "/etc/dhcpcd.conf"
   chmod 644 "/etc/dhcpcd.conf"
+  #Have dhcpcd reload it's config file (in-place, non-destructive)
   dhcpcd --rebind
   retcode=$?
 fi
