@@ -92,7 +92,8 @@ private slots:
 	void on_tool_fw_addrule_clicked();
 	void on_tool_fw_applyrule_clicked();
 	void on_tool_fw_rmrule_clicked();
-	void on_tool_fw_shortcuts_clicked();
+	void open_fw_port();
+	void open_fw_service();
 };
 
 #endif

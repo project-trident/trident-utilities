@@ -430,8 +430,9 @@ QJsonObject Networking::current_firewall_files(){
   QJsonObject profiles, custom;
   for(int i=0; i<files.length(); i++){
     QString abspath = dir.absoluteFilePath(files[i]);
+    //qDebug() << "File:" << files[i] << abspath;
     if(files[i].startsWith("custom-")){
-      profiles.insert(files[i].section("-",1,-1).section(".",0,-2), abspath);
+      custom.insert(files[i].section("-",1,-1).section(".",0,-2), abspath);
     }else{
       profiles.insert(files[i].section(".",0,-2), abspath);
     }
@@ -450,12 +451,12 @@ bool Networking::change_firewall_profile(QString path){
 }
 
 bool Networking::save_firewall_rules(QString path, QStringList contents){
-  return writeFileAsRoot(path, contents, QStringList() << "sv" << "restart" << "nftables", "744");
+  return writeFileAsRoot(path, contents, QStringList() << "sv" << "restart" << "nftables", "644");
 }
 
 bool Networking::remove_firewall_rules(QString path){
   if(!QFile::exists(path)){ return true; } //does not exist in the first place
-  if(!QFileInfo(path).canonicalPath().startsWith("/etc/firewall-conf/")){ return false; }
+  if(!QFileInfo(path).canonicalFilePath().startsWith("/etc/firewall-conf/")){ qDebug() << "Canonical Path:" << QFileInfo(path).canonicalPath(); return false; }
   bool ok = CmdReturn("qsudo", QStringList() << "rm" << "-f" << path);
   if(ok){
     CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables");
@@ -463,6 +464,18 @@ bool Networking::remove_firewall_rules(QString path){
   return ok;
 }
 
+QJsonObject Networking::known_services(){
+  static QJsonObject known;
+  if(known.isEmpty()){
+    QStringList contents = readFile("/etc/services");
+    for(int i=0; i<contents.length(); i++){
+      QStringList info = contents[i].split(" ",QString::SkipEmptyParts);
+      if(info.length() != 2){ continue; }
+      known.insert(info[0], known.value(info[0]).toArray() << info[1]);
+    }
+  }
+  return known;
+}
 
 //General Purpose functions
 QStringList Networking::readFile(QString path){
@@ -510,14 +523,14 @@ bool Networking::writeFileAsRoot(QString path, QStringList contents, QStringList
   QString tmppath = "/tmp/."+path.section("/",-1);
   bool ok = writeFile(tmppath, contents);
   if(!ok){ return false; } //could not write the temp file
-  ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << path << path+".old");
+  if(QFile::exists(path)){ ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << path << path+".old"); }
   if(ok){
     if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << tmppath << path); }
     if(ok){
       CmdReturn("qsudo", QStringList() << "chown" << "root:root" << path);
       if(!perms.isEmpty()){ CmdReturn("qsudo", QStringList() << "chmod" << perms << path); }
       if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd); }
-      if(!ok){
+      if(!ok && QFile::exists(path+".old") ){
         //Restore the previous config file and restart again
         CmdReturn("qsudo", QStringList() << "mv" << "-f" << path+".old" << path);
         if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd); }

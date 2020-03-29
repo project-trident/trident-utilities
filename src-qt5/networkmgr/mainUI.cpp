@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <QMenu>
 
 // === PUBLIC ===
 mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
@@ -28,6 +29,11 @@ mainUI::mainUI() : QMainWindow(), ui(new Ui::mainUI()){
   ui->tabs_conn->setCurrentWidget(ui->tab_conn_status);
   connect(ui->combo_conn_devices, SIGNAL(currentIndexChanged(int)), this, SLOT(updateConnectionInfo()) );
   connect(ui->tool_conn_status_refresh, SIGNAL(clicked()), this, SLOT(updateConnectionInfo()) );
+
+  //Setup the menu of shortcuts for firewall rules
+  ui->tool_fw_shortcuts->setMenu(new QMenu(ui->tool_fw_shortcuts));
+  ui->tool_fw_shortcuts->menu()->addAction(tr("Open Port"), this, SLOT(open_fw_port()) );
+  ui->tool_fw_shortcuts->menu()->addAction(tr("Open Port for Service"), this, SLOT(open_fw_service()) );
 
   //Ensure all the page actions are full-width
   this->show();
@@ -619,7 +625,7 @@ void mainUI::refresh_current_firewall(){
   ui->label_fw_status->setText( ui->label_fw_status->whatsThis().arg(running ? tr("Active") : tr("Disabled")) );
   // Now update the profile files and custom rules
   QJsonObject current = NETWORK->current_firewall_files();
-  qDebug() << "Current state:" << current;
+  //qDebug() << "Current state:" << current;
   QString cprofile = current.value("running_profile").toString();
   ui->combo_fw_profile->setWhatsThis(cprofile); //tag the current profile in the backend
   QStringList profiles = current.value("profiles").toObject().keys();
@@ -635,12 +641,15 @@ void mainUI::refresh_current_firewall(){
     ui->combo_fw_profile->setCurrentIndex(ui->combo_fw_profile->count()-1);
   }
   QString crule = ui->combo_fw_rules->currentText();
-  QStringList rules = current.value("rules").toObject().keys();
+  QStringList rules = current.value("custom").toObject().keys();
   ui->combo_fw_rules->clear();
   for(int i=0; i<rules.length(); i++){
-    ui->combo_fw_rules->addItem(rules[i], current.value("rules").toObject().value(rules[i]).toString());
+    //qDebug() << "New Rule:" << rules[i] << current.value("custom").toObject().value(rules[i]);
+    ui->combo_fw_rules->addItem(rules[i], current.value("custom").toObject().value(rules[i]).toString());
     if(crule == rules[i]){ ui->combo_fw_rules->setCurrentIndex(ui->combo_fw_rules->count()-1); }
   }
+  on_combo_fw_profile_currentIndexChanged(0);
+  on_combo_fw_rules_currentIndexChanged(0);
 }
 
 void mainUI::on_tool_fw_start_clicked(){
@@ -676,14 +685,29 @@ void mainUI::on_combo_fw_profile_currentIndexChanged(int){
 
 void mainUI::on_combo_fw_rules_currentIndexChanged(int){
   QString path = ui->combo_fw_rules->currentData().toString();
-  ui->text_fw_rule->setText( Networking::readFile(path).join("\n") );
+  bool ok = !path.isEmpty();
+  ui->tool_fw_applyrule->setEnabled(ok);
+  ui->tool_fw_rmrule->setEnabled(ok);
+  ui->tool_fw_shortcuts->setEnabled(ok);
+  if(ok){
+    ui->text_fw_rule->setText( Networking::readFile(path).join("\n") );
+  }else{
+    ui->text_fw_rule->setText("");
+  }
 }
 
 void mainUI::on_tool_fw_addrule_clicked(){
   //Prompt for the new rule name
-
+  QString profile = QInputDialog::getText(this, tr("New Firewall Rules"), tr("Profile Name:") );
+  QString path = "/etc/firewall-conf/custom-"+profile+".conf";
+  //Make sure this profile does not already exist
+  if(QFile::exists(path)){
+    QMessageBox::warning(this, tr("Error"), tr("Profile already exists"));
+    return;
+  }
   //Add the rule into the list and pre-select it
-
+  ui->combo_fw_rules->addItem(profile, path);
+  ui->combo_fw_rules->setCurrentIndex(ui->combo_fw_rules->count()-1);
 }
 
 void mainUI::on_tool_fw_applyrule_clicked(){
@@ -699,12 +723,45 @@ void mainUI::on_tool_fw_applyrule_clicked(){
 void mainUI::on_tool_fw_rmrule_clicked(){
   QString path = ui->combo_fw_rules->currentData().toString();
   if(path.isEmpty()){ return; }
+  //qDebug() << "Remove Firewall Rules:" << path;
   if( !NETWORK->remove_firewall_rules(path) ){
    QMessageBox::warning(this, tr("Error"), tr("Could not remove firewall rules:")+"\n\n"+ui->combo_fw_rules->currentText());
   }
   QTimer::singleShot(50, this, SLOT(refresh_current_firewall()));
 }
 
-void mainUI::on_tool_fw_shortcuts_clicked(){
+void mainUI::open_fw_port(){
+  int port = QInputDialog::getInt(this, tr("Open Firewall Port"), tr("Port Number:"));
+  if(port<0){ return; } //cancelled
+  QString line = "add rule inet filter %1 %2 dport %3 accept";
+  QStringList newLines;
+    newLines << line.arg("input", "tcp", QString::number(port));
+    newLines << line.arg("output", "tcp", QString::number(port));
+    newLines << line.arg("input", "udp", QString::number(port));
+    newLines << line.arg("output", "udp", QString::number(port));
+  ui->text_fw_rule->append("\n"+newLines.join("\n"));
+}
 
+void mainUI::open_fw_service(){
+  QJsonObject svcs = NETWORK->known_services();
+  QString service = QInputDialog::getItem(this, tr("Open Firewall for Service"), tr("Select a service:"), svcs.keys(), 0, false);
+  if(service.isEmpty()){ return; } //cancelled
+  QJsonArray info = svcs.value(service).toArray();
+  //qDebug() << "Service Info:" << service << info;
+  bool tcp, udp;
+  for(int i=0; i<info.count(); i++){
+    if(info[i].toString().endsWith("/tcp")){ tcp = true; }
+    else if(info[i].toString().endsWith("/udp")){ udp = true; }
+  }
+  QString line = "add rule inet filter %1 %2 dport %3 accept";
+  QStringList newLines;
+  if(tcp){
+    newLines << line.arg("input", "tcp", service);
+    newLines << line.arg("output", "tcp", service);
+  }
+  if(udp){
+    newLines << line.arg("input", "udp", service);
+    newLines << line.arg("output", "udp", service);
+  }
+  ui->text_fw_rule->append("\n"+newLines.join("\n"));
 }
