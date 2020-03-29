@@ -7,5 +7,5 @@ Type=Application
 StartupNotify=true
 Categories=Settings;Utility;
 Name=Network Settings
-GenericName=Network Settings Manager
+GenericName=
 Comment=Network Settings
