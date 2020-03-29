@@ -67,14 +67,15 @@ public:
 	static QStringList readFile(QString path);
 	static bool writeFile(QString path, QStringList contents);
 	static bool sameNetwork(QJsonObject A, QJsonObject B);
+	static bool writeFileAsRoot(QString path, QStringList contents, QStringList loadCmd = QStringList(), QString perms = "644");
+
+	static QString CmdOutput(QString proc, QStringList args);
+	static int CmdReturnCode(QString proc, QStringList args);
+	static bool CmdReturn(QString proc, QStringList args);
 
 private:
 	QNetworkConfigurationManager *NETMAN;
 	QJsonObject last_wifi_scan;
-
-	QString CmdOutput(QString proc, QStringList args);
-	int CmdReturnCode(QString proc, QStringList args);
-	bool CmdReturn(QString proc, QStringList args);
 
 	void performWifiScan(QStringList wifi_devices); //designed to be run in a separate thread
 	void parseWifiScanResults(QStringList info);

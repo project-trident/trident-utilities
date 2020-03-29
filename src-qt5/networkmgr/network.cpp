@@ -171,18 +171,7 @@ bool Networking::set_config(QJsonObject config){
   }
   if(!changed){ return true; } //nothing to do.
   if(contents.last() != ""){ contents << ""; } //always leave a blank line at the end
-
-  // Now save the new config file and update dhcpcd to use it
-  QString tmpfile = "/tmp/.tmp.dhcpcd.conf";
-  static QString enablebin = QCoreApplication::applicationDirPath()+"/trident-enable-dhcpcdconf";
-  bool ok = writeFile(tmpfile, contents);
-  if(ok){
-    //qDebug() << "Save config:" << enablebin << tmpfile << QFile::exists(tmpfile);
-    ok = CmdReturn("qsudo", QStringList() << enablebin << tmpfile);
-    //qDebug() << "Got save config return:" << ok;
-  }
-  if(QFile::exists(tmpfile)){ QFile::remove(tmpfile); } //clean up if needed
-  return ok;
+  return writeFileAsRoot(DHCPConf, contents, QStringList() << "dhcpcd" << "--rebind", "644");
 }
 
 Networking::State Networking::deviceState(QString device){
@@ -352,13 +341,7 @@ bool Networking::save_custom_dns_settings(QJsonObject obj){
   }
   //qDebug() << "Save custom DNS settings:" << changed << contents;
   if(!changed){ return true; } //nothing to do
-  bool ok = true;
-  static QString tmpfile = "/tmp/.resolvconf.conf";
-  if(ok){ ok = writeFile(tmpfile, contents); }
-  if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << tmpfile << "/etc/resolvconf.conf"); }
-  if(ok){ ok = CmdReturn("qsudo", QStringList() << "chown" << "root:root" << tmpfile); }
-  if(ok){ ok = CmdReturn("qsudo", QStringList() << "resolvconf" << "-u"); }
-  if(!QFile::exists(tmpfile)){ QFile::remove("tmpfile"); }
+  bool ok = writeFileAsRoot("/etc/resolvconf.conf", contents, QStringList() << "resolvconf" << "-u", "744");
   return ok;
 }
 
@@ -467,15 +450,7 @@ bool Networking::change_firewall_profile(QString path){
 }
 
 bool Networking::save_firewall_rules(QString path, QStringList contents){
-  QString tmppath = "/tmp/."+path.section("/",-1);
-  bool ok = writeFile(tmppath, contents);
-  if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << tmppath << path); }
-  if(ok){
-    CmdReturn("qsudo", QStringList() << "chown" << "root:root" << path);
-    CmdReturn("qsudo", QStringList() << "chmod" << "744" << path);
-    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables");
-  }
-  return ok;
+  return writeFileAsRoot(path, contents, QStringList() << "sv" << "restart" << "nftables", "744");
 }
 
 bool Networking::remove_firewall_rules(QString path){
@@ -531,7 +506,28 @@ bool Networking::sameNetwork(QJsonObject A, QJsonObject B){
   return false;
 }
 
-//  === PRIVATE ===
+bool Networking::writeFileAsRoot(QString path, QStringList contents, QStringList loadCmd, QString perms){
+  QString tmppath = "/tmp/."+path.section("/",-1);
+  bool ok = writeFile(tmppath, contents);
+  if(!ok){ return false; } //could not write the temp file
+  ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << path << path+".old");
+  if(ok){
+    if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << tmppath << path); }
+    if(ok){
+      CmdReturn("qsudo", QStringList() << "chown" << "root:root" << path);
+      if(!perms.isEmpty()){ CmdReturn("qsudo", QStringList() << "chmod" << perms << path); }
+      if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd); }
+      if(!ok){
+        //Restore the previous config file and restart again
+        CmdReturn("qsudo", QStringList() << "mv" << "-f" << path+".old" << path);
+        if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd); }
+      }
+    }
+  }
+  if(!ok && QFile::exists(tmppath)){ QFile::remove(tmppath); } //cleanup leftover file
+  return ok;
+}
+
 QString Networking::CmdOutput(QString proc, QStringList args){
   QProcess P;
     P.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
@@ -553,6 +549,7 @@ bool Networking::CmdReturn(QString proc, QStringList args){
   return (retcode == 0);
 }
 
+//  === PRIVATE ===
 void Networking::performWifiScan(QStringList wifi_devices){
   if(wifi_devices.isEmpty()){ return; }
   this->emit starting_wifi_scan();
