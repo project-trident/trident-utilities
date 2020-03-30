@@ -1,4 +1,4 @@
-QT *= network x11extras
+QT *= network
 
 message("Using SingleApplication class")
 

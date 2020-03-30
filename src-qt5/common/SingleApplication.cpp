@@ -11,7 +11,6 @@
 #include <QFile>
 #include <QLocalSocket>
 #include <QDebug>
-#include <QX11Info>
 
 #include <unistd.h> //for getuid()
 
