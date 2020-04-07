@@ -40,7 +40,7 @@ public:
 
 	bool save_wifi_network(QJsonObject obj, bool clearonly = false);
 	bool remove_wifi_network(QString id);
-	bool connect_to_wifi_network(QString id, bool noretry = false); //known network ID number
+	bool connect_to_wifi_network(QJsonObject obj, bool noretry = false);
 
 	// DNS specific functionality
 	QString current_dns();
@@ -68,18 +68,19 @@ public:
 	static QStringList readFile(QString path);
 	static bool writeFile(QString path, QStringList contents);
 	static bool sameNetwork(QJsonObject A, QJsonObject B);
-	static bool writeFileAsRoot(QString path, QStringList contents, QStringList loadCmd = QStringList(), QString perms = "644");
+	bool writeFileAsRoot(QString path, QStringList contents, QStringList loadCmd = QStringList(), QString perms = "644");
 
-	static QString CmdOutput(QString proc, QStringList args);
-	static int CmdReturnCode(QString proc, QStringList args);
-	static bool CmdReturn(QString proc, QStringList args);
+	static QString CmdOutput(QString proc, QStringList args, QProcess *qsudoproc = 0);
+	static int CmdReturnCode(QString proc, QStringList args, QProcess *qsudoproc = 0);
+	static bool CmdReturn(QString proc, QStringList args, QProcess *qsudoproc = 0);
 
 private:
 	QNetworkConfigurationManager *NETMAN;
 	QJsonObject last_wifi_scan;
-
+	QProcess *qSudoProc;
 	void performWifiScan(QStringList wifi_devices); //designed to be run in a separate thread
 	void parseWifiScanResults(QStringList info);
+	QString knownNetworkID(QJsonObject info);
 
 public slots:
 	bool setDeviceState(QString device, State stat);

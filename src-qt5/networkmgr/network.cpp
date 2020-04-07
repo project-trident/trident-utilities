@@ -10,6 +10,7 @@ QStringList wifidevs;
 
 Networking::Networking(QObject *parent) : QObject(parent){
   NETMAN = new QNetworkConfigurationManager(this);
+  qSudoProc = 0; // uninitialized yet
 }
 
 Networking::~Networking(){
@@ -192,7 +193,7 @@ QJsonArray Networking::known_wifi_networks(){
   if(cachecheck.isNull() || (lastMod > cachecheck) ){
     //Need to re-read the file to assemble the list of ID's.
     idcache = QJsonArray();
-    QStringList contents = CmdOutput("wpa_cli", QStringList() << "list_networks").split("\n");
+    QStringList contents = CmdOutput("wpa_cli", QStringList() << "-i" << wifidevs[0] << "list_networks").split("\n");
     cachecheck = QDateTime::currentDateTime();
     //qDebug() << "WPA Contents:" <<  contents;
     for(int i=0; i<contents.length(); i++){
@@ -213,7 +214,7 @@ QJsonArray Networking::known_wifi_networks(){
 
 QJsonObject Networking::active_wifi_network(){
   QJsonObject obj;
-  QStringList info = CmdOutput("wpa_cli", QStringList() << "status").split("\n");
+  QStringList info = CmdOutput("wpa_cli", QStringList() << "-i" << wifidevs[0] << "status").split("\n");
   for(int i=0; i<info.length(); i++){
     QString key = info[i].section("=",0,0);
     if(key == "id" || key == "bssid" || key == "ssid"){
@@ -241,11 +242,11 @@ bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
   if(clearonly){ qDebug() << "Remove Wifi Network:" << ssid; }
   else{ qDebug() << "Save Wifi Network:" << ssid; }
   if(clearonly) {
-    CmdReturn("wpa_cli", QStringList() << "remove_network" << id);
+    CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "remove_network" << id);
   }else{
     if(id.isEmpty()){
       //Need to get a new ID
-      QStringList val = CmdOutput("wpa_cli", QStringList() << "add_network").split("\n");
+      QStringList val = CmdOutput("wpa_cli", QStringList() << "-i" << wifidevs[0] << "add_network").split("\n");
       for(int i=val.length()-1; i>=0; i-- ){
         if(val[i].simplified().isEmpty()){ continue; }
         else if(val[i].simplified().toInt() >= 0){ id = val[i].simplified(); break; }
@@ -253,15 +254,15 @@ bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
       if(id.isEmpty()){ return false; }
       //qDebug() << "New network ID:" << id << "raw:" << val;
     }
-    if(!ssid.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "set_network" << id << "ssid" << "\""+ssid+"\""); }
-    if(!bssid.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "set_network" << id << "bssid" << bssid); }
-    if(!password.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "set_network" << id << "psk" << "\""+password+"\""); }
+    if(!ssid.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "set_network" << id << "ssid" << "\""+ssid+"\""); }
+    if(!bssid.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "set_network" << id << "bssid" << bssid); }
+    if(!password.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "set_network" << id << "psk" << "\""+password+"\""); }
   }
-  CmdReturn("wpa_cli", QStringList() << "save_config");
+  CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "save_config");
   bool ok = false;
   if(clearonly){ ok = !is_known(obj); }
   else { ok = is_known(obj); }
-  if(!clearonly && ok){ connect_to_wifi_network(id); }
+  if(!clearonly && ok){ connect_to_wifi_network(obj); }
   return ok;
 }
 
@@ -272,15 +273,17 @@ bool Networking::remove_wifi_network(QString id){
   return save_wifi_network(obj, true); //remove only
 }
 
-bool Networking::connect_to_wifi_network(QString id, bool noretry){
-  //qDebug() << "Connect to network:" << id;
-  bool ok = CmdOutput("wpa_cli", QStringList() << "select_network" << id).contains("OK");
+bool Networking::connect_to_wifi_network(QJsonObject info, bool noretry){
+  QString id = knownNetworkID(info);
+  //The "id" here needs to be the integer number, not the ssid name
+  //qDebug() << "Connect to network:" << id << info;
+  bool ok = CmdOutput("wpa_cli", QStringList() << "-i" << wifidevs[0] << "select_network" << id).contains("OK");
   if(!ok && !noretry){
-    CmdReturn("wpa_cli", QStringList() << "reconfigure"); //poke wpa to start attempting again
+    CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "reconfigure"); //poke wpa to start attempting again
     QThread::sleep(1);
-    ok = connect_to_wifi_network(id, true); //do not re-try again
+    ok = connect_to_wifi_network(info, true); //do not re-try again
   }
-  if(ok){ CmdReturn("wpa_cli", QStringList() << "save_config"); } //go ahead and update config
+  if(ok){ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "save_config"); } //go ahead and update config
   return ok;
 }
 
@@ -355,7 +358,7 @@ QJsonObject Networking::current_wireguard_profiles(){
   QStringList files = dir.entryList( QStringList() << "*.conf", QDir::Files, QDir::Name);
   if(files.isEmpty() && !dir.isReadable()){
     //The dir is probaby not readable right now - make it so (files inside are still unreadable/secure)
-    bool ok = CmdReturn("qsudo", QStringList() << "chmod" << "755" << "/etc/wireguard");
+    bool ok = CmdReturn("qsudo", QStringList() << "chmod" << "755" << "/etc/wireguard", qSudoProc);
     if(ok){ files = dir.entryList( QStringList() << "*.conf", QDir::Files, QDir::Name); } //try again
   }
   for(int i=0; i<files.length(); i++){
@@ -373,31 +376,31 @@ bool Networking::add_wireguard_profile(QString path){
   //Make sure the directory exists and create it otherwise
   bool ok = true;
   if(!QFile::exists("/etc/wireguard")){
-    ok = CmdReturn("qsudo", QStringList() << "mkdir" << "-p" << "/etc/wireguard");
-    if(ok){ CmdReturn("qsudo", QStringList() << "chmod" << "755" << "/etc/wireguard"); }
+    ok = CmdReturn("qsudo", QStringList() << "mkdir" << "-p" << "/etc/wireguard", qSudoProc);
+    if(ok){ CmdReturn("qsudo", QStringList() << "chmod" << "755" << "/etc/wireguard", qSudoProc); }
   }
   if(!ok){ return false; }
   QString newpath = "/etc/wireguard/"+ path.section("/",-1);
-  ok = CmdReturn("qsudo", QStringList() << "mv" << path << newpath);
+  ok = CmdReturn("qsudo", QStringList() << "mv" << path << newpath, qSudoProc);
   if(ok){
-    CmdReturn("qsudo", QStringList() << "chown" << "root:root" << newpath);
-    CmdReturn("qsudo", QStringList() << "chmod" << "700" << newpath);
+    CmdReturn("qsudo", QStringList() << "chown" << "root:root" << newpath, qSudoProc);
+    CmdReturn("qsudo", QStringList() << "chmod" << "700" << newpath, qSudoProc);
   }
   return ok;
 }
 
 bool Networking::remove_wireguard_profile(QString name){
-  return CmdReturn("qsudo", QStringList() << "rm" << "/etc/wireguard/"+name+".conf");
+  return CmdReturn("qsudo", QStringList() << "rm" << "/etc/wireguard/"+name+".conf", qSudoProc);
 }
 
 bool Networking::start_wireguard_profile(QString name){
   //qDebug() << "Start WG:" << name;
-  return CmdReturn("qsudo", QStringList() << "wg-quick" << "up" << name);
+  return CmdReturn("qsudo", QStringList() << "wg-quick" << "up" << name, qSudoProc);
 }
 
 bool Networking::stop_wireguard_profile(QString name){
   //qDebug() << "Stop WG:" << name;
-  return CmdReturn("qsudo", QStringList() << "wg-quick" << "down" << name);
+  return CmdReturn("qsudo", QStringList() << "wg-quick" << "down" << name, qSudoProc);
 }
 
 // Firewall functionality
@@ -406,11 +409,11 @@ bool Networking::firewall_is_running(){
 }
 
 bool Networking::start_firewall(){
-return CmdReturn("qsudo", QStringList() << "sv" << "start" << "nftables");
+return CmdReturn("qsudo", QStringList() << "sv" << "start" << "nftables", qSudoProc);
 }
 
 bool Networking::stop_firewall(){
-return CmdReturn("qsudo", QStringList() << "sv" << "stop" << "nftables");
+return CmdReturn("qsudo", QStringList() << "sv" << "stop" << "nftables", qSudoProc);
 }
 
 QJsonObject Networking::current_firewall_files(){
@@ -443,9 +446,9 @@ QJsonObject Networking::current_firewall_files(){
 }
 
 bool Networking::change_firewall_profile(QString path){
-  bool ok = CmdReturn("qsudo", QStringList() << "ln" << "-sf" << path << "/etc/nftables.conf");
+  bool ok = CmdReturn("qsudo", QStringList() << "ln" << "-sf" << path << "/etc/nftables.conf", qSudoProc);
   if(ok){
-    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables");
+    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables", qSudoProc);
   }
   return ok;
 }
@@ -457,9 +460,9 @@ bool Networking::save_firewall_rules(QString path, QStringList contents){
 bool Networking::remove_firewall_rules(QString path){
   if(!QFile::exists(path)){ return true; } //does not exist in the first place
   if(!QFileInfo(path).canonicalFilePath().startsWith("/etc/firewall-conf/")){ qDebug() << "Canonical Path:" << QFileInfo(path).canonicalPath(); return false; }
-  bool ok = CmdReturn("qsudo", QStringList() << "rm" << "-f" << path);
+  bool ok = CmdReturn("qsudo", QStringList() << "rm" << "-f" << path, qSudoProc);
   if(ok){
-    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables");
+    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables", qSudoProc);
   }
   return ok;
 }
@@ -523,17 +526,17 @@ bool Networking::writeFileAsRoot(QString path, QStringList contents, QStringList
   QString tmppath = "/tmp/."+path.section("/",-1);
   bool ok = writeFile(tmppath, contents);
   if(!ok){ return false; } //could not write the temp file
-  if(QFile::exists(path)){ ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << path << path+".old"); }
+  if(QFile::exists(path)){ ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << path << path+".old", qSudoProc); }
   if(ok){
-    if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << tmppath << path); }
+    if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << tmppath << path, qSudoProc); }
     if(ok){
-      CmdReturn("qsudo", QStringList() << "chown" << "root:root" << path);
-      if(!perms.isEmpty()){ CmdReturn("qsudo", QStringList() << "chmod" << perms << path); }
-      if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd); }
+      CmdReturn("qsudo", QStringList() << "chown" << "root:root" << path, qSudoProc);
+      if(!perms.isEmpty()){ CmdReturn("qsudo", QStringList() << "chmod" << perms << path, qSudoProc); }
+      if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd, qSudoProc); }
       if(!ok && QFile::exists(path+".old") ){
         //Restore the previous config file and restart again
-        CmdReturn("qsudo", QStringList() << "mv" << "-f" << path+".old" << path);
-        if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd); }
+        CmdReturn("qsudo", QStringList() << "mv" << "-f" << path+".old" << path, qSudoProc);
+        if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd, qSudoProc); }
       }
     }
   }
@@ -541,24 +544,43 @@ bool Networking::writeFileAsRoot(QString path, QStringList contents, QStringList
   return ok;
 }
 
-QString Networking::CmdOutput(QString proc, QStringList args){
-  QProcess P;
-    P.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
-    P.start(proc, args);
-    P.waitForFinished();
-  return P.readAll();
+QString Networking::CmdOutput(QString proc, QStringList args, QProcess *qsudoproc){
+  if(proc=="qsudo"){
+    if(qsudoproc == 0){ qsudoproc = new QProcess();
+      qsudoproc->setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+    }
+    qsudoproc->start(proc, args);
+    qsudoproc->waitForFinished();
+    return qsudoproc->readAll();
+  }else{
+    QProcess P;
+      P.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+      P.start(proc, args);
+      P.waitForFinished();
+    return P.readAll();
+  }
 }
 
-int Networking::CmdReturnCode(QString proc, QStringList args){
-  QProcess P;
-    P.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
-    P.start(proc, args);
-    P.waitForFinished();
-  return P.exitCode();
+int Networking::CmdReturnCode(QString proc, QStringList args, QProcess *qsudoproc){
+  if(proc=="qsudo"){
+    if(qsudoproc == 0){
+      qsudoproc = new QProcess();
+      qsudoproc->setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+    }
+    qsudoproc->start(proc, args);
+    qsudoproc->waitForFinished();
+    return qsudoproc->exitCode();
+  }else{
+    QProcess P;
+      P.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+      P.start(proc, args);
+      P.waitForFinished();
+    return P.exitCode();
+  }
 }
 
-bool Networking::CmdReturn(QString proc, QStringList args){
-  int retcode = CmdReturnCode(proc,args);
+bool Networking::CmdReturn(QString proc, QStringList args, QProcess *qsudoproc){
+  int retcode = CmdReturnCode(proc,args, qsudoproc);
   return (retcode == 0);
 }
 
@@ -618,6 +640,18 @@ void Networking::parseWifiScanResults(QStringList lines){
   }
 }
 
+QString Networking::knownNetworkID(QJsonObject info){
+  if(info.contains("id")){ return info.value("id").toString(); }
+  //Need to search for the numeric number for this network really quick
+  QJsonArray nets = known_wifi_networks();
+  for(int i=0; i<nets.count(); i++){
+    if( sameNetwork(nets[i].toObject(), info) ){
+      return nets[i].toObject().value("id").toString();
+    }
+  }
+  return "";
+}
+
 // === PUBLIC SLOTS ===
 bool Networking::setDeviceState(QString device, State stat){
   bool ok = false;
@@ -627,19 +661,19 @@ bool Networking::setDeviceState(QString device, State stat){
     case StateRunning:
       //Start the network device
       qDebug() << "Starting network device:" << device;
-      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "up") == 0);
+      ok = CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "up", qSudoProc);
       break;
     case StateStopped:
       //Stop the network device
       qDebug() << "Stopping network device:" << device;
-      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "down") == 0);
+      ok = CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "down", qSudoProc);
       break;
     case StateRestart:
       //Restart the network device
       qDebug() << "Restarting network device:" << device;
-      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "down") == 0);
+      ok = CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "down", qSudoProc);
       QThread::sleep(1);
-      ok = (CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "up") == 0);
+      ok = CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "up", qSudoProc);
       break;
     case StateUnknown:
       break; //do nothing

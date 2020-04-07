@@ -324,9 +324,9 @@ void mainUI::on_tool_connect_wifi_clicked(){
   bool part_of_group = (curit->parent() !=0);
   QString id = curit->data(0, Qt::UserRole).toString();
   if(info.isEmpty() || id.isEmpty()){ return; } //nothing selected
-  //qDebug() << "Connect to wifi:" << info;
+  //qDebug() << "Connect to wifi:" << id << info;
   if(NETWORK->is_known(info)){
-    bool ok = NETWORK->connect_to_wifi_network(id); //just connect to this known network
+    bool ok = NETWORK->connect_to_wifi_network(info); //just connect to this known network
     if(!ok){
       QMessageBox::warning(this, tr("Error"), QString(tr("Could not connect to network: %1")).arg(info.value("ssid").toString()) );
     }
