@@ -526,20 +526,40 @@ bool Networking::writeFileAsRoot(QString path, QStringList contents, QStringList
   QString tmppath = "/tmp/."+path.section("/",-1);
   bool ok = writeFile(tmppath, contents);
   if(!ok){ return false; } //could not write the temp file
-  if(QFile::exists(path)){ ok = CmdReturn("qsudo", QStringList() << "mv" << "-f" << path << path+".old", qSudoProc); }
-  if(ok){
-    if(ok){ ok = CmdReturn("qsudo", QStringList() << "mv" << tmppath << path, qSudoProc); }
-    if(ok){
-      CmdReturn("qsudo", QStringList() << "chown" << "root:root" << path, qSudoProc);
-      if(!perms.isEmpty()){ CmdReturn("qsudo", QStringList() << "chmod" << perms << path, qSudoProc); }
-      if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd, qSudoProc); }
-      if(!ok && QFile::exists(path+".old") ){
-        //Restore the previous config file and restart again
-        CmdReturn("qsudo", QStringList() << "mv" << "-f" << path+".old" << path, qSudoProc);
-        if(!loadCmd.isEmpty()){ ok = CmdReturn("qsudo", loadCmd, qSudoProc); }
-      }
-    }
+  //Now write the temporary script to swap over the files (single qsudo request)
+  bool overwrite = QFile::exists(path);
+  QStringList script;
+  script << "#!/bin/bash";
+  if(overwrite){
+    script << "mv -f \""+path+"\" \""+path+".old\"";
+    script << "if [ $? -ne 0 ] ; then exit 1 ; fi";
   }
+  script << "mv \""+tmppath+"\" \""+path+"\"";
+  script << "if [ $? -ne 0 ] ; then";
+  script << "  mv -f \""+path+".old\" \""+path+"\"";
+  script << "  exit 1";
+  script << "fi";
+  script << "chown root:root \""+path+"\"";
+  if(!perms.isEmpty()){ script << "chmod "+perms+" \""+path+"\""; }
+  if(!loadCmd.isEmpty()){
+    script << loadCmd.join(" ");
+    script << "ret=$?";
+    if(overwrite){
+      script << "if [ ${ret} -ne 0 ] ; then";
+      script << "  mv -f \""+path+".old\" \""+path+"\"";
+      script << loadCmd.join(" ");
+      script << "fi";
+    }
+    script << "exit ${ret}";
+  }
+  QString tmpscript = "/tmp/.update-"+path.section("/",-1).section(".",0,0)+".sh";
+  ok = writeFile(tmpscript, script);
+  QFile::setPermissions(tmpscript, QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner \
+		|  QFileDevice::ReadGroup | QFileDevice::WriteGroup | QFileDevice::ExeGroup \
+		| QFileDevice::ReadOther | QFileDevice::WriteOther | QFileDevice::ExeOther);
+
+  ok = CmdReturn("qsudo", QStringList() << tmpscript, qSudoProc);
+  QFile::remove(tmpscript);
   if(!ok && QFile::exists(tmppath)){ QFile::remove(tmppath); } //cleanup leftover file
   return ok;
 }
