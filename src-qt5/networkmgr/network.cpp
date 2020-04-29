@@ -372,20 +372,27 @@ QJsonObject Networking::current_wireguard_profiles(){
   return out;
 }
 
-bool Networking::add_wireguard_profile(QString path){
-  //Make sure the directory exists and create it otherwise
-  bool ok = true;
-  if(!QFile::exists("/etc/wireguard")){
-    ok = CmdReturn("qsudo", QStringList() << "mkdir" << "-p" << "/etc/wireguard", qSudoProc);
-    if(ok){ CmdReturn("qsudo", QStringList() << "chmod" << "755" << "/etc/wireguard", qSudoProc); }
+bool Networking::add_wireguard_profile(QString curpath){
+  //Now write the temporary script to swap over the file (single qsudo request)
+  bool mkdir = QFile::exists("/etc/wireguard");
+  QString path = "/etc/wireguard/"+curpath.section("/",-1);
+  QStringList script;
+  script << "#!/bin/bash";
+  if(mkdir){
+    script << "mkdir /etc/wireguard";
+    script << "chmod 755 /etc/wireguard";
   }
-  if(!ok){ return false; }
-  QString newpath = "/etc/wireguard/"+ path.section("/",-1);
-  ok = CmdReturn("qsudo", QStringList() << "mv" << path << newpath, qSudoProc);
-  if(ok){
-    CmdReturn("qsudo", QStringList() << "chown" << "root:root" << newpath, qSudoProc);
-    CmdReturn("qsudo", QStringList() << "chmod" << "700" << newpath, qSudoProc);
-  }
+  script << "mv -f \""+curpath+"\" \""+path+"\"";
+  script << "chown root:root \""+path+"\"";
+  script << "chmod 700 \""+path+"\"";
+  QString tmpscript = "/tmp/.update-"+path.section("/",-1).section(".",0,0)+".sh";
+  bool ok = writeFile(tmpscript, script);
+  QFile::setPermissions(tmpscript, QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner \
+		|  QFileDevice::ReadGroup | QFileDevice::WriteGroup | QFileDevice::ExeGroup \
+		| QFileDevice::ReadOther | QFileDevice::WriteOther | QFileDevice::ExeOther);
+
+  ok = CmdReturn("qsudo", QStringList() << tmpscript, qSudoProc);
+  QFile::remove(tmpscript);
   return ok;
 }
 
@@ -446,11 +453,10 @@ QJsonObject Networking::current_firewall_files(){
 }
 
 bool Networking::change_firewall_profile(QString path){
-  bool ok = CmdReturn("qsudo", QStringList() << "ln" << "-sf" << path << "/etc/nftables.conf", qSudoProc);
-  if(ok){
-    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables", qSudoProc);
-  }
-  return ok;
+  QStringList script;
+  script << "ln -sf \""+path+"\" /etc/nftables.conf";
+  script << "sv restart nftables";
+  return runScriptAsRoot(script, "config-nftables");
 }
 
 bool Networking::save_firewall_rules(QString path, QStringList contents){
@@ -460,11 +466,10 @@ bool Networking::save_firewall_rules(QString path, QStringList contents){
 bool Networking::remove_firewall_rules(QString path){
   if(!QFile::exists(path)){ return true; } //does not exist in the first place
   if(!QFileInfo(path).canonicalFilePath().startsWith("/etc/firewall-conf/")){ qDebug() << "Canonical Path:" << QFileInfo(path).canonicalPath(); return false; }
-  bool ok = CmdReturn("qsudo", QStringList() << "rm" << "-f" << path, qSudoProc);
-  if(ok){
-    CmdReturn("qsudo", QStringList() << "sv" << "restart" << "nftables", qSudoProc);
-  }
-  return ok;
+  QStringList script;
+  script << "rm -f \""+path+"\"";
+  script << "sv restart nftables";
+  return runScriptAsRoot(script, "config-nftables");
 }
 
 QJsonObject Networking::known_services(){
@@ -552,16 +557,25 @@ bool Networking::writeFileAsRoot(QString path, QStringList contents, QStringList
     }
     script << "exit ${ret}";
   }
-  QString tmpscript = "/tmp/.update-"+path.section("/",-1).section(".",0,0)+".sh";
-  ok = writeFile(tmpscript, script);
+  ok = runScriptAsRoot(script, "update-"+path.section("/",-1).section(".",0,0)+".sh");
+  if(!ok && QFile::exists(tmppath)){ QFile::remove(tmppath); } //cleanup leftover file
+  return ok;
+}
+
+bool Networking::runScriptAsRoot(QStringList script, QString scriptName){
+  if(scriptName.isEmpty()){ scriptName = "update-config.sh"; }
+  else if(!scriptName.endsWith(".sh")){ scriptName.append(".sh"); }
+  QString tmpscript = "/tmp/."+scriptName.section("/",-1);
+  if(script.first()!="#!/bin/bash"){ script.prepend("#!/bin/bash"); }
+  bool ok = writeFile(tmpscript, script);
   QFile::setPermissions(tmpscript, QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner \
 		|  QFileDevice::ReadGroup | QFileDevice::WriteGroup | QFileDevice::ExeGroup \
 		| QFileDevice::ReadOther | QFileDevice::WriteOther | QFileDevice::ExeOther);
 
   ok = CmdReturn("qsudo", QStringList() << tmpscript, qSudoProc);
   QFile::remove(tmpscript);
-  if(!ok && QFile::exists(tmppath)){ QFile::remove(tmppath); } //cleanup leftover file
   return ok;
+
 }
 
 QString Networking::CmdOutput(QString proc, QStringList args, QProcess *qsudoproc){

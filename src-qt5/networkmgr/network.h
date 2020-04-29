@@ -69,6 +69,7 @@ public:
 	static bool writeFile(QString path, QStringList contents);
 	static bool sameNetwork(QJsonObject A, QJsonObject B);
 	bool writeFileAsRoot(QString path, QStringList contents, QStringList loadCmd = QStringList(), QString perms = "644");
+	bool runScriptAsRoot(QStringList script, QString sname);
 
 	static QString CmdOutput(QString proc, QStringList args, QProcess *qsudoproc = 0);
 	static int CmdReturnCode(QString proc, QStringList args, QProcess *qsudoproc = 0);
