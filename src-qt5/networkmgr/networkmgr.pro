@@ -3,6 +3,8 @@ QT       += core gui widgets network concurrent
 TARGET = trident-networkmgr
 target.path = /usr/bin
 
+isEmpty(LRELEASE){ LRELEASE = $$[QT_INSTALL_BINS]/lrelease }
+
 TEMPLATE = app
 
 SOURCES += main.cpp \
@@ -90,7 +92,7 @@ TRANSLATIONS =  i18n/tri-nmgr_af.ts \
                 i18n/tri-nmgr_zu.ts
 
 dotrans.path=/usr/share/trident-networkmgr/i18n/
-dotrans.extra=cd $$PWD/i18n && lrelease -nounfinished *.ts && cp *.qm $(INSTALL_ROOT)/usr/share/trident-networkmgr/i18n/
+dotrans.extra=cd $$PWD/i18n && $${LRELEASE} -nounfinished *.ts && cp *.qm $(INSTALL_ROOT)/usr/share/trident-networkmgr/i18n/
 
 #Some conf to redirect intermediate stuff in separate dirs
 UI_DIR=./.build/ui/
