@@ -705,9 +705,7 @@ bool Networking::setDeviceState(QString device, State stat){
     case StateRestart:
       //Restart the network device
       qDebug() << "Restarting network device:" << device;
-      ok = CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "down", qSudoProc);
-      QThread::sleep(1);
-      ok = CmdReturn("qsudo", QStringList() << "ip" << "link" << "set" << device << "up", qSudoProc);
+      ok = runScriptAsRoot(QStringList() << "ip link set "+device+" down" << "sleep 1" << "ip link set "+device+" up", "restart-"+device);
       break;
     case StateUnknown:
       break; //do nothing
