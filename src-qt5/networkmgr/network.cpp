@@ -257,6 +257,7 @@ bool Networking::save_wifi_network(QJsonObject obj, bool clearonly){
     if(!ssid.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "set_network" << id << "ssid" << "\""+ssid+"\""); }
     if(!bssid.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "set_network" << id << "bssid" << bssid); }
     if(!password.isEmpty()){ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "set_network" << id << "psk" << "\""+password+"\""); }
+    else{ CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "set_network" << id << "key_mgmt" << "NONE"); }
   }
   CmdReturn("wpa_cli", QStringList() << "-i" << wifidevs[0] << "save_config");
   bool ok = false;
