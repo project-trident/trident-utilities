@@ -344,6 +344,7 @@ void mainUI::on_tool_connect_wifi_clicked(){
       if(roam){ info.remove("bssid"); } //Just use the generic ssid
     }
     NETWORK->save_wifi_network(info, false);
+    if(!secure){ QTimer::singleShot(5000, this, SLOT(LaunchBrowser())); } //for capture-portal login
   }
   ui->tabs_conn->setCurrentWidget(ui->tab_conn_status);
   QTimer::singleShot(50, this, SLOT(updateConnectionInfo()) );

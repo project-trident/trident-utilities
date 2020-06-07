@@ -46,6 +46,9 @@ private slots:
 	void pageChange(QAction *triggered);
 	void updateConnectionInfo();
 	void updateWifiConnections();
+	void LaunchBrowser(){
+	  QProcess::startDetached("xdg-open http://project-trident.org");
+	}
 
 	void on_tree_wifi_networks_currentItemChanged(QTreeWidgetItem *it);
 	void on_tool_dev_restart_clicked();
