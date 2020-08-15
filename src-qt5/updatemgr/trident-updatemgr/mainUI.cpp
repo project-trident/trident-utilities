@@ -31,7 +31,7 @@ MainUI::MainUI() : QMainWindow(), ui(new Ui::MainUI){
   enableButtons( UPMGR->isUpdateRunning() );
   ui->text_updates->setPlainText(UPMGR->updatelog());
   page_change();
-  QTimer::singleShot(10, this, SLOT(checkTrains()) );
+  //QTimer::singleShot(10, this, SLOT(checkTrains()) );
   QTimer::singleShot(10, this, SLOT(updateRepoInfo()) );
 }
 
@@ -44,12 +44,12 @@ void MainUI::setupConnections(){
   connect(UPMGR, SIGNAL(updateStarting()), this, SLOT(updateStarting()) );
   connect(UPMGR, SIGNAL(updateFinished(bool)), this, SLOT(updateFinished(bool)) );
   connect(UPMGR, SIGNAL(newUpdateMessage(bool, QString)), this, SLOT(updateMessage(bool,QString)) );
-  connect(UPMGR, SIGNAL(trainsStarting()), this, SLOT(trainsLoading()) );
-  connect(UPMGR, SIGNAL(trainsAvailable()), this, SLOT(checkTrains()) );
+  //connect(UPMGR, SIGNAL(trainsStarting()), this, SLOT(trainsLoading()) );
+  //connect(UPMGR, SIGNAL(trainsAvailable()), this, SLOT(checkTrains()) );
   connect(UPMGR, SIGNAL(repoInfoAvailable()), this, SLOT(updateRepoInfo()) );
   connect(ui->tree_be, SIGNAL(itemSelectionChanged()), this, SLOT(be_selection_changed()));
-  connect(ui->list_trains, SIGNAL(currentRowChanged(int)), this, SLOT(trainSelChanged()) );
-  connect(ui->tool_trains_rescan, SIGNAL(clicked()), UPMGR, SLOT(startTrainsCheck()));
+  //connect(ui->list_trains, SIGNAL(currentRowChanged(int)), this, SLOT(trainSelChanged()) );
+  //connect(ui->tool_trains_rescan, SIGNAL(clicked()), UPMGR, SLOT(startTrainsCheck()));
   connect(ui->list_errata, SIGNAL(currentRowChanged(int)), this, SLOT(updateErrataInfo()) );
 }
 
@@ -111,7 +111,7 @@ void MainUI::page_change(){
     ui->stackedWidget->setCurrentWidget(ui->page_updates);
     ui->label_update_sysver->setText( UPMGR->systemVersion() );
   }else if(act == ui->actionUpdate_Paths){
-    ui->stackedWidget->setCurrentWidget(ui->page_trains);
+    //ui->stackedWidget->setCurrentWidget(ui->page_trains);
   }else if(act == ui->actionRollback){
     ui->stackedWidget->setCurrentWidget(ui->page_rollback);
     refreshBE_list();
@@ -149,7 +149,7 @@ void MainUI::updateFinished(bool){
   enableButtons(false);
 }
 void MainUI::updateRepoInfo(){
-  QJsonObject repo = UPMGR->currentTrainInfo();
+  QJsonObject repo;// = UPMGR->currentTrainInfo();
   ui->label_repo_version->setText(repo.value("version").toString());
   ui->label_repo_date->setText(repo.value("lastupdate").toString());
   ui->tool_repo_infourl->setVisible(repo.contains("info_url"));
@@ -245,6 +245,7 @@ void MainUI::on_tool_be_delete_clicked(){
   }
 }
 
+/*
 void MainUI::checkTrains(){
   QJsonObject trains = UPMGR->listTrains();
   if(trains.keys().isEmpty()){
@@ -268,14 +269,16 @@ void MainUI::checkTrains(){
   ui->list_trains->setEnabled(true);
   QTimer::singleShot(0, this, SLOT(trainSelChanged()));
 }
-
+*/
+/*
 void MainUI::trainsLoading(){
   //qDebug() << "Got Trains Loading...";
   ui->label_train_description->setText(tr("Loading Repository Information..."));
   ui->list_trains->setEnabled(false);
   ui->tool_change_train->setEnabled(false);
 }
-
+*/
+/*
 void MainUI::trainSelChanged(){
   QListWidgetItem *it = ui->list_trains->currentItem();
   if(it==0){
@@ -288,10 +291,12 @@ void MainUI::trainSelChanged(){
   ui->tool_change_train->setEnabled(!current);
   ui->label_train_description->setText(description);
 }
-
+*/
+/*
 void MainUI::on_tool_change_train_clicked(){
   QListWidgetItem *it = ui->list_trains->currentItem();
   if(it==0){ return; }
   QString trainname = it->text();
   UPMGR->changeTrain(trainname);
 }
+*/

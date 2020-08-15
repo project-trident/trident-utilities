@@ -1,10 +1,8 @@
 #include "updateMgr.h"
 
-#define LOGFILE "/tmp/.sysup.status"
-#define TRAINSFILE "/tmp/.sysup.trains"
+#define LOGFILE "/tmp/.trident-update.status"
 #define REBOOTFILE "/tmp/.rebootRequired"
 
-#define SYSMANIFEST "/var/db/current-manifest.json"
 #define REPOMANIFEST "https://project-trident.org/repo-info.json"
 #define REPOFILE "/tmp/.trident-repo.status"
 #define SYSIDFILE "/var/lib/dbus/machine-id"
@@ -19,13 +17,13 @@ UpdateManager::UpdateManager(QObject *parent) : QObject(parent) {
   connect(&PROC, SIGNAL(readyRead()), this, SLOT(processMessage()) );
   connect(&PROC, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int)) );
 
-  TRPROC.setProcessChannelMode(QProcess::MergedChannels);
-  connect(&TRPROC, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(trainsProcFinished(int)) );
-  trainIsList = true;
+  //TRPROC.setProcessChannelMode(QProcess::MergedChannels);
+  //connect(&TRPROC, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(trainsProcFinished(int)) );
+  //trainIsList = true;
 
   logcontents = readLocalFile(LOGFILE); //load any existing logfile first
-  traincontents = readLocalFile(TRAINSFILE); //load any existing file first
-  system_version = QJsonDocument::fromJson( readLocalFile(SYSMANIFEST).toLocal8Bit()).object().value("os_version").toString();
+  //traincontents = readLocalFile(TRAINSFILE); //load any existing file first
+  system_version = "void"; //QJsonDocument::fromJson( readLocalFile(SYSMANIFEST).toLocal8Bit()).object().value("os_version").toString();
   system_version = system_version.append("::"+readLocalFile(SYSIDFILE)); //inclide the random system uuid file (to better ensure uniqueness in our stats)
   repo_info = QJsonDocument::fromJson( readLocalFile(REPOFILE).toLocal8Bit() ).object();
   logfile = new QFile(LOGFILE);
@@ -90,6 +88,7 @@ bool UpdateManager::startUpdateCheck(){
   return true;
 }
 
+/*
 QJsonObject UpdateManager::listTrains(){
   if(traincontents.isEmpty()){ startTrainsCheck(); return QJsonObject(); }
   //qDebug() << "Got Trains:" << traincontents;
@@ -124,7 +123,9 @@ QJsonObject UpdateManager::listTrains(){
   if(!tobj.isEmpty()){ obj.insert(tobj.value("name").toString(), tobj); }
   return obj;
 }
+*/
 
+/*
 bool UpdateManager::changeTrain(QString trainname){
   emit trainsStarting();
   trainIsList = false;
@@ -142,7 +143,7 @@ QJsonObject UpdateManager::currentTrainInfo(){
   }
   return QJsonObject();
 }
-
+*/
 // === PRIVATE ===
 void UpdateManager::clear_logfile(){
   if(logfile->isOpen()){ logfile->close(); }
@@ -153,13 +154,13 @@ void UpdateManager::clear_logfile(){
 // === PRIVATE SLOTS ===
 void UpdateManager::startUpdates(bool checkonly, bool fullupdate){
   processIsCheck=checkonly;
-  QStringList args;
+  QStringList args; args << "trident-update";
   args.append( checkonly ? "-check" : "-update" );
-  if(!checkonly && fullupdate){ args.append("-fullupdate"); }
+  //if(!checkonly && fullupdate){ args.append("-fullupdate"); }
   //Clear out the current logs and start up the process
   clear_logfile();
   if(checkonly){ lastcheck = QDateTime::currentDateTime(); fetchRepoInfo(); }
-  PROC.start("/usr/local/sbin/.susysup",args);
+  PROC.start("qsudo",args);
   emit updateStarting();
   injectIntoLog( checkonly ? tr("Checking for system updates...") : tr("Starting system updates...") );
 }
@@ -215,6 +216,7 @@ void UpdateManager::processFinished(int retcode){
   }
 }
 
+/*
 void UpdateManager::trainsProcFinished(int retcode){
   //qDebug() << "Trains Proc Finished";
   bool success = (retcode==0);
@@ -235,6 +237,7 @@ void UpdateManager::trainsProcFinished(int retcode){
     QTimer::singleShot(2000, this, SLOT(startUpdateCheck()));
   }
 }
+*/
 
 void UpdateManager::injectIntoLog(QString msg){
   QString curdt = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
@@ -251,6 +254,7 @@ void UpdateManager::injectIntoLog(QString msg){
 }
 
 // === PUBLIC SLOTS ===
+/*
 void UpdateManager::startTrainsCheck(){
   if(TRPROC.state()!=QProcess::NotRunning){ return; } //already running
   //qDebug() << "Starting check for Trains...";
@@ -258,3 +262,4 @@ void UpdateManager::startTrainsCheck(){
   trainIsList = true;
   TRPROC.start("/usr/local/sbin/.susysup", QStringList() << "-list-trains" );
 }
+*/

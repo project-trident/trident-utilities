@@ -59,10 +59,10 @@ private slots:
 	void on_tool_be_activate_clicked();
 	void on_tool_be_delete_clicked();
 	// TRAINS
-	void checkTrains();
-	void trainsLoading();
-	void trainSelChanged();
-	void on_tool_change_train_clicked();
+	//void checkTrains();
+	//void trainsLoading();
+	//void trainSelChanged();
+	//void on_tool_change_train_clicked();
 
 signals:
 

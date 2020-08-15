@@ -1,11 +1,11 @@
 QT       += core gui widgets network x11extras
 
 TARGET = trident-updatemgr
-target.path = /usr/local/bin
+target.path = /usr/bin
+
+isEmpty(LRELEASE){ LRELEASE = $$[QT_INSTALL_BINS]/lrelease }
 
 TEMPLATE = app
-
-SUBDIRS += susysup
 
 SOURCES += main.cpp \
 		mainUI.cpp \
@@ -86,8 +86,8 @@ TRANSLATIONS =  i18n/tri-umgr_af.ts \
                 i18n/tri-umgr_zh_TW.ts \
                 i18n/tri-umgr_zu.ts
 
-dotrans.path=/usr/local/share/trident-updatemgr/i18n/
-dotrans.extra=cd $$PWD/i18n && lrelease -nounfinished *.ts && cp *.qm $(INSTALL_ROOT)/usr/local/share/trident-updatemgr/i18n/
+dotrans.path=/usr/share/trident-updatemgr/i18n/
+dotrans.extra=cd $$PWD/i18n &&  $${LRELEASE} -nounfinished *.ts && cp *.qm $(INSTALL_ROOT)/usr/share/trident-updatemgr/i18n/
 
 #Some conf to redirect intermediate stuff in separate dirs
 UI_DIR=./.build/ui/
