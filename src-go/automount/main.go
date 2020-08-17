@@ -50,7 +50,7 @@ func handleEvent(line string){
   var eventType string
   for _, word := range(entries){
     if word == "" { continue }
-    if word == "add" || word == "remove" {
+    if word == "add" || word == "remove" || word == "change" {
       eventType = word
     }else if strings.HasPrefix(word, "/devices/") {
       path := strings.Split(word,"/")
@@ -66,6 +66,9 @@ func handleEvent(line string){
     if fileExists(entry) {
       os.Remove(entry)
     }
+    if eventType == "change" {
+      go createEntry(deviceID, entry)
+    }
   }
 }
 
@@ -76,6 +79,8 @@ func createEntry(device string, filepath string) {
   var FS string
   var Model string
   var Vendor string
+  var Label string
+  var ATracks string
   lines := strings.Split( string(bytes), "\n" )
   for _, line := range(lines) {
     list := strings.Split(line,"=")
@@ -86,19 +91,40 @@ func createEntry(device string, filepath string) {
       case "ID_FS_TYPE": FS = list[1]
       case "ID_MODEL": Model = list[1]
       case "ID_VENDOR": Vendor = list[1]
+      case "ID_FS_LABEL": Label = list[1]
+      case "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO": ATracks = list[1]
     }
   }
-  if FS == "" { return } //if the FS cannot be detected, then it is a good bet it cannot be browsed/used
+  if FS == "" && ATracks == "" { return } //if the FS cannot be detected, then it is a good bet it cannot be browsed/used
   // Now assemble the output file content
   var content []string
   content = append(content, "[Desktop Entry]")
   content = append(content, "Version=1.1")
-  content = append(content, "Type=Directory")
-  content = append(content, "Path=/browse/"+device+"\n")
-  content = append(content, "Name="+Vendor+" "+Model)
+  if FS == "udf" {
+    //Optical media - video disk - need to open directly with player - not mount it
+    content = append(content, "Type=Application")
+    content = append(content, "Exec=xdg-open dvd:///dev/"+device)    
+  }else if ATracks != "" {
+    //Optical media - audio disk (no filesystem)
+    if Label == "" { Label = "Audio CD" }
+    content = append(content, "Type=Application")
+    content = append(content, "Exec=xdg-open cdda:///dev/"+device)    
+  } else {
+    //Data media
+    content = append(content, "Type=Directory")
+    content = append(content, "Path=/browse/"+device+"\n")
+  }
+  if Label == "" {
+    content = append(content, "Name="+Vendor+" "+Model)
+  } else {
+    content = append(content, "Name="+Label)
+    content = append(content, "GenericName="+Vendor+" "+Model)
+  }
   content = append(content, "Comment="+device+" ("+FS+")")
   switch FS {
     case "cd9660": content = append(content, "Icon=media-optical")
+    case "udf": content = append(content, "Icon=media-optical-dvd")
+    case "": content = append(content, "Icon=media-optical-audio")
     default: content = append(content, "Icon=media-removable")
   }
 
