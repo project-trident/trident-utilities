@@ -5,6 +5,6 @@ clean:
 	@rm trident-automount
 
 install:
-	@cp trident-automount /usr/bin/.
-	mkdir -p /etc/sv/trident-automount
-	cp sv/run /etc/sv/trident-automount/run
+	@cp trident-automount ${DESTDIR}/usr/bin/.
+	mkdir -p ${DESTDIR}/etc/sv/trident-automount
+	cp sv/run ${DESTDIR}/etc/sv/trident-automount/run

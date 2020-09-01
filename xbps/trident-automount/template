@@ -1,0 +1,18 @@
+# Template file for 'trident-automount'
+pkgname=trident-automount
+version=2020.06.07
+revision=1
+wrksrc="trident-utilities-${version}"
+build_wrksrc="src-go/automount"
+makedepends="go"
+depends="autofs"
+short_desc="Automounting daemon from Project Trident utilizing autofs"
+maintainer="Ken Moore <ken@project-trident.org>"
+license="BSD-2-Clause"
+homepage="https://github.com/project-trident/trident-utilities"
+distfiles="https://github.com/project-trident/trident-utilities/archive/v${version}.tar.gz"
+checksum=b25389296d9b2e80c28fe299001be1158442f6a584f2999dce0a20ff29bbea3b
+
+post_install() {
+	vlicense ${wrksrc}/LICENSE
+}
