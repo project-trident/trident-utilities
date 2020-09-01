@@ -43,3 +43,4 @@ src-qt5/updatemgr/trident-updatemgr/Makefile
 src-qt5/updatemgr/trident-updatemgr/trident-updatemgr
 src-qt5/networkmgr/Makefile
 src-qt5/networkmgr/trident-networkmgr
+src-go/automount/trident-automount
