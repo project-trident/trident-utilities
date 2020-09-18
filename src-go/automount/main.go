@@ -16,14 +16,21 @@ func fileExists(filename string) bool {
     }
     return !info.IsDir()
 }
+func fileNotExistsOrContains(filename string, match string) bool {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil { return true } //file does not exist or could not be read
+	if strings.Contains( string(bytes), match) { return true } //contains the matching string
+	return false
+}
+
 
 func setupSystem(){
   needrestart := false
   err := os.MkdirAll( "/etc/autofs/auto.master.d/", 0755)
   if err != nil { fmt.Println("Could not setup autofs rules! Check if this is being run as root?", err) ; os.Exit(1) }
-  if !fileExists("/etc/autofs/auto.trident") {
+  if fileNotExistsOrContains("/etc/autofs/auto.trident", "user=${USER}") {
     // Need to create the autofs rule to let users mount devices
-    err = ioutil.WriteFile("/etc/autofs/auto.trident",[]byte("*	-fstype=auto,rw,nosuid,user=${USER},gid=users	:/dev/& \n"), 0644)
+    err = ioutil.WriteFile("/etc/autofs/auto.trident",[]byte("*	-fstype=auto,rw,nosuid,uid=${USER},gid=users	:/dev/& \n"), 0644)
     needrestart = true
   }
   if err != nil { fmt.Println("Could not setup autofs rules! Check if this is being run as root?", err) ; os.Exit(1) }
