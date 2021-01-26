@@ -16,19 +16,28 @@ import (
 )
 
 type IdList struct {
-  List map[string]bool
+  List map[string]int
 }
 
-func addId( id IdList, newid string) IdList {
-  nmap := id.List
-  if _, ok := nmap[newid]; !ok {
-    if nmap == nil { nmap = make(map[string]bool) }
-    nmap[newid] = true
-    id.List = nmap
-    /*fmt.Println("Added:", newid)*/
+func (id *IdList) addID(newid string) {
+  if id.List == nil { id.List = make(map[string]int) }
+  count, ok := id.List[newid]
+  if !ok {
+    count = 1
+  }else{
+    count += 1
   }
-  /*id.List = nmap*/
-  return id
+  id.List[newid] = count
+}
+
+func (id *IdList) CountUnique() int {
+	return len(id.List)
+}
+
+func (id *IdList) CountTotal() int {
+	var tot int = 0
+	for _, cnt := range id.List { tot += cnt }
+	return tot
 }
 
 /* Define all the data objects for assembling JSON for charts */
@@ -180,18 +189,34 @@ func parse_line(text string) []string {
 
 func add_to_hash( elem []string, hash map[string]IdList) {
   /* Daily index */
-  combo := elem[1]+","+elem[3]
-  hash[combo] = addId(hash[combo], elem[0])
+  //combo := elem[1]+","+elem[3]
+  //hash[combo].addID( elem[0])
   /* Total Daily index (all versions) */
-  combo = elem[1]
-  hash[combo] = addId(hash[combo], elem[0])
+  //combo = elem[1]
+  //hash[combo].addID( elem[0])
   /* Now Monthly index */
-  month := S.Join( S.Split(elem[1],"-")[0:2], "-")
-  combo = month+","+elem[3]
-  hash[combo] = addId(hash[combo], elem[0])
+
+  //combo = month+","+elem[3]
+  //hash[combo].addID( elem[0])
   /* Now Total Monthly index (all versions)*/
-  combo = month
-  hash[combo] = addId(hash[combo], elem[0])
+  //combo = month
+  //hash[combo].addID( elem[0])
+	//Get the month number out of the elements
+	month := S.Join( S.Split(elem[1],"-")[0:2], "-")
+	//Generate the list of totals to add up
+	ids := []string{
+		elem[1]+","+elem[3],	//Daily index
+		elem[1],				//Total Daily index (all versions)
+		month+","+elem[3],	//Monthly index by version
+		month,				//Total Monthly index (all versions)
+	}
+	//Add to the counts
+	for _, id := range ids {
+		idlist, ok := hash[id]
+		if !ok { idlist = IdList{} } //need to create the item first
+		idlist.addID(elem[0])
+		hash[id] = idlist
+	}
 }
 
 func hash_calc_unique( hash map[string]IdList) map[string]int {
