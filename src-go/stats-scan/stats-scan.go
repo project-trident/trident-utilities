@@ -188,19 +188,6 @@ func parse_line(text string) []string {
 }
 
 func add_to_hash( elem []string, hash map[string]IdList) {
-  /* Daily index */
-  //combo := elem[1]+","+elem[3]
-  //hash[combo].addID( elem[0])
-  /* Total Daily index (all versions) */
-  //combo = elem[1]
-  //hash[combo].addID( elem[0])
-  /* Now Monthly index */
-
-  //combo = month+","+elem[3]
-  //hash[combo].addID( elem[0])
-  /* Now Total Monthly index (all versions)*/
-  //combo = month
-  //hash[combo].addID( elem[0])
 	//Get the month number out of the elements
 	month := S.Join( S.Split(elem[1],"-")[0:2], "-")
 	//Generate the list of totals to add up
@@ -222,7 +209,8 @@ func add_to_hash( elem []string, hash map[string]IdList) {
 func hash_calc_unique( hash map[string]IdList) map[string]int {
   numhash := make(map[string]int)
   for k := range hash {
-    numhash[k] = len( hash[k].List )
+    idlist, ok := hash[k]
+    if ok{ numhash[k] = idlist.CountTotal() }
   }
   return numhash
 }
